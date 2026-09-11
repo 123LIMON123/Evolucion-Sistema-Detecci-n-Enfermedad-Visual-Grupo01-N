@@ -23,18 +23,12 @@ import androidx.navigation.NavController
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.DiseaseCatalog
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.RiskLevel
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.ClinicalStatusChip
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.label
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.toClinicalTier
-
-private fun labelFor(riskLevel: RiskLevel, strings: AppStrings): String = when (riskLevel) {
-    RiskLevel.BAJO_RIESGO -> strings.riskLow
-    RiskLevel.RIESGO_MODERADO -> strings.riskModerate
-    RiskLevel.SOSPECHA_ALTA -> strings.riskHigh
-}
 
 @Composable
 fun AnalysisResultScreen(
@@ -88,7 +82,7 @@ fun AnalysisResultScreen(
             Text(text = "${strings.confidenceLabel}: ${(confidence * 100).toInt()}%", style = MaterialTheme.typography.bodyLarge)
 
             Spacer(modifier = Modifier.height(12.dp))
-            ClinicalStatusChip(tier = tier, label = labelFor(riskLevel, strings))
+            ClinicalStatusChip(tier = tier, label = riskLevel.label(strings))
 
             Spacer(modifier = Modifier.height(48.dp))
 

@@ -12,6 +12,7 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.ImagePreprocessingS
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.ImagePreprocessor
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.PixelNormalization
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.TFLiteDiseaseClassifier
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.camera.FrameQualityAnalyzer
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAnalysisViewModel
 
 /**
@@ -45,6 +46,8 @@ class AppContainer(context: Context) {
 
     val diagnosticInterpreter: MedicalDiagnosticInterpreter = MedicalDiagnosticInterpreter()
 
+    val frameQualityAnalyzer: FrameQualityAnalyzer = FrameQualityAnalyzer()
+
     val historyRepository: AnalysisHistoryRepository = AnalysisHistoryRepository()
 
     val userSessionRepository: UserSessionRepository = UserSessionRepository()
@@ -60,7 +63,8 @@ class CameraAnalysisViewModelFactory(
         return CameraAnalysisViewModel(
             imagePreprocessor = appContainer.imagePreprocessor,
             classifier = appContainer.classifier,
-            interpreter = appContainer.diagnosticInterpreter
+            interpreter = appContainer.diagnosticInterpreter,
+            frameQualityAnalyzer = appContainer.frameQualityAnalyzer
         ) as T
     }
 }

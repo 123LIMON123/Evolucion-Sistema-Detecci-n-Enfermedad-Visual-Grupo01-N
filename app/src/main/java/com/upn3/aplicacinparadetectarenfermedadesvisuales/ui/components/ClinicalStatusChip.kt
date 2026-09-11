@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.RiskLevel
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.ClinicalTier
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.PillShape
 
@@ -23,6 +24,12 @@ fun RiskLevel.toClinicalTier(): ClinicalTier = when (this) {
     RiskLevel.BAJO_RIESGO -> ClinicalTier.HEALTHY
     RiskLevel.RIESGO_MODERADO -> ClinicalTier.WARNING
     RiskLevel.SOSPECHA_ALTA -> ClinicalTier.CRITICAL
+}
+
+fun RiskLevel.label(strings: AppStrings): String = when (this) {
+    RiskLevel.BAJO_RIESGO -> strings.riskLow
+    RiskLevel.RIESGO_MODERADO -> strings.riskModerate
+    RiskLevel.SOSPECHA_ALTA -> strings.riskHigh
 }
 
 /** Umbrales propios del medidor de probabilidades (distintos de los umbrales clinicos del

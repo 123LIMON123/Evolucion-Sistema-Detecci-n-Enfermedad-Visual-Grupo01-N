@@ -7,6 +7,8 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.DiagnosisResult
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.MedicalDiagnosticInterpreter
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.EyeDiseaseClassifier
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.ImagePreprocessor
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.camera.FrameQuality
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.camera.FrameQualityAnalyzer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,11 +30,31 @@ sealed interface AnalysisUiState {
 class CameraAnalysisViewModel(
     private val imagePreprocessor: ImagePreprocessor,
     private val classifier: EyeDiseaseClassifier,
-    private val interpreter: MedicalDiagnosticInterpreter
+    private val interpreter: MedicalDiagnosticInterpreter,
+    private val frameQualityAnalyzer: FrameQualityAnalyzer
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Idle)
     val uiState: StateFlow<AnalysisUiState> = _uiState.asStateFlow()
+
+    private val _frameQuality = MutableStateFlow(FrameQuality.POSITIONING)
+    val frameQuality: StateFlow<FrameQuality> = _frameQuality.asStateFlow()
+
+    /**
+     * Se llama en cada frame en vivo muestreado por la camara: primero evalua encuadre/luz/
+     * nitidez, y solo dispara el analisis de enfermedad cuando el frame es lo bastante bueno
+     * (evita correr inferencia -y mostrar un resultado potencialmente erroneo- sobre una imagen
+     * oscura, con glare o borrosa).
+     */
+    fun onFrameCaptured(bitmap: Bitmap, rotationDegrees: Int = 0) {
+        viewModelScope.launch(Dispatchers.Default) {
+            val quality = frameQualityAnalyzer.analyze(bitmap)
+            _frameQuality.value = quality
+            if (quality == FrameQuality.GOOD) {
+                analyze(bitmap, rotationDegrees)
+            }
+        }
+    }
 
     fun analyze(bitmap: Bitmap, rotationDegrees: Int = 0) {
         if (_uiState.value is AnalysisUiState.Analyzing) return
@@ -51,6 +73,7 @@ class CameraAnalysisViewModel(
 
     fun resetToIdle() {
         _uiState.value = AnalysisUiState.Idle
+        _frameQuality.value = FrameQuality.POSITIONING
     }
 
     override fun onCleared() {

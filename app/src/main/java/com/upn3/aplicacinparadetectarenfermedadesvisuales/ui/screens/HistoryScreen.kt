@@ -25,19 +25,12 @@ import androidx.navigation.NavController
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.DiseaseCatalog
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.RiskLevel
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.ClinicalStatusChip
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.label
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.toClinicalTier
-
-private fun riskLabelFor(riskLevel: RiskLevel, strings: AppStrings) = when (riskLevel) {
-    RiskLevel.BAJO_RIESGO -> strings.riskLow
-    RiskLevel.RIESGO_MODERADO -> strings.riskModerate
-    RiskLevel.SOSPECHA_ALTA -> strings.riskHigh
-}
 
 @Composable
 fun HistoryScreen(
@@ -93,7 +86,7 @@ fun HistoryScreen(
                             }
                             ClinicalStatusChip(
                                 tier = item.riskLevel.toClinicalTier(),
-                                label = riskLabelFor(item.riskLevel, strings)
+                                label = item.riskLevel.label(strings)
                             )
                         }
                     }
