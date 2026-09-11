@@ -10,10 +10,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -36,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -49,7 +47,13 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.DiseaseCatalog
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.camera.CameraPreview
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.camera.ViewfinderOverlay
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.MedicalDisclaimerBanner
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.ProbabilityMeterRow
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.ViewfinderAlert
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.ViewfinderPositioning
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.ViewfinderReady
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.AnalysisUiState
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAnalysisViewModel
 
@@ -115,6 +119,12 @@ fun CameraScreen(
         navController.navigate("analysis_result/${best.code}/${best.confidence}/${best.riskLevel.name}")
     }
 
+    val ringColor = when (uiState) {
+        is AnalysisUiState.Success -> ViewfinderReady
+        is AnalysisUiState.Failed -> ViewfinderAlert
+        else -> ViewfinderPositioning
+    }
+
     Scaffold(
         topBar = {
             AppTopBar(
@@ -137,15 +147,28 @@ fun CameraScreen(
                     )
                 } else {
                     CameraPreview(onFrameCaptured = { bitmap, rotation -> viewModel.analyze(bitmap, rotation) })
+                    ViewfinderOverlay(ringColor = ringColor, modifier = Modifier.fillMaxSize())
                 }
+
+                MedicalDisclaimerBanner(
+                    text = strings.disclaimerText,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(16.dp)
+                )
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
                         .background(
-                            Color.Black.copy(alpha = 0.72f),
-                            RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                            MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.95f),
+                            RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                        )
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant,
+                            RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                         )
                         .padding(20.dp)
                 ) {
@@ -153,33 +176,30 @@ fun CameraScreen(
                         is AnalysisUiState.Idle, is AnalysisUiState.Analyzing -> {
                             Text(
                                 text = strings.analyzingMessage,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
                         is AnalysisUiState.Failed -> {
                             Text(
                                 text = "${strings.errorPrefix}: ${state.message}",
-                                color = Color(0xFFFF8A80),
+                                color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
                         is AnalysisUiState.Success -> {
-                            state.results.take(3).forEach { result ->
-                                val diseaseName = DiseaseCatalog.byCode(result.code)?.localized(language)?.name
-                                    ?: result.code
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(text = diseaseName, color = Color.White)
-                                    Text(text = "${(result.confidence * 100).toInt()}%", color = Color.White)
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                state.results.take(3).forEach { result ->
+                                    val diseaseName = DiseaseCatalog.byCode(result.code)?.localized(language)?.name
+                                        ?: result.code
+                                    ProbabilityMeterRow(name = diseaseName, confidence = result.confidence)
                                 }
                             }
 
                             Button(
                                 onClick = { goToResultDetail() },
-                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                                shape = MaterialTheme.shapes.medium
                             ) {
                                 Text(strings.viewDetail)
                             }
@@ -188,7 +208,8 @@ fun CameraScreen(
 
                     Button(
                         onClick = { gallerySelector.launch("image/*") },
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        shape = MaterialTheme.shapes.medium
                     ) {
                         Text(if (uploadedImage == null) strings.uploadPhoto else strings.uploadAnotherPhoto)
                     }
@@ -200,7 +221,7 @@ fun CameraScreen(
                                 viewModel.resetToIdle()
                             },
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                            shape = MaterialTheme.shapes.medium
                         ) {
                             Text(strings.backToLiveCamera)
                         }
@@ -215,7 +236,7 @@ fun CameraScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(strings.cameraPermissionRequired)
                     Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { gallerySelector.launch("image/*") }) {
+                    Button(onClick = { gallerySelector.launch("image/*") }, shape = MaterialTheme.shapes.medium) {
                         Text(strings.uploadPhotoInstead)
                     }
 
@@ -234,7 +255,7 @@ fun CameraScreen(
                             Text(text = "$diseaseName: ${(result.confidence * 100).toInt()}%")
                         }
                         if (successState != null && successState.results.isNotEmpty()) {
-                            Button(onClick = { goToResultDetail() }) {
+                            Button(onClick = { goToResultDetail() }, shape = MaterialTheme.shapes.medium) {
                                 Text(strings.viewDetail)
                             }
                         }

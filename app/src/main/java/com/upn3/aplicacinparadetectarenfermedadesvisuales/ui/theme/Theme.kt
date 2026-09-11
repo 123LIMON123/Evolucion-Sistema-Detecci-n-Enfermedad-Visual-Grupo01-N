@@ -1,73 +1,73 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = EyeBlue80,
-    onPrimary = EyeBlue20,
-    secondary = EyeTeal80,
-    onSecondary = EyeTeal20,
-    tertiary = EyeAmber80,
-    onTertiary = EyeAmber40,
-    background = EyeNeutral10,
-    onBackground = EyeNeutral90,
-    surface = EyeNeutral10,
-    onSurface = EyeNeutral90,
-    surfaceVariant = EyeNeutral20,
-    onSurfaceVariant = EyeNeutral90,
-    error = EyeError80,
-    onError = EyeError20,
+// El design system "OcuCheck AI" define un unico esquema clinico claro (sin variante oscura):
+// pensado para consultorios/clinicas con buena iluminacion donde la legibilidad y la calma visual
+// priman sobre la adaptacion al tema del sistema.
+private val ClinicalColorScheme = lightColorScheme(
+    primary = Primary,
+    onPrimary = OnPrimary,
+    primaryContainer = PrimaryContainer,
+    onPrimaryContainer = OnPrimaryContainer,
+    inversePrimary = InversePrimary,
+    secondary = Secondary,
+    onSecondary = OnSecondary,
+    secondaryContainer = SecondaryContainer,
+    onSecondaryContainer = OnSecondaryContainer,
+    tertiary = Tertiary,
+    onTertiary = OnTertiary,
+    tertiaryContainer = TertiaryContainer,
+    onTertiaryContainer = OnTertiaryContainer,
+    error = AppError,
+    onError = OnError,
+    errorContainer = ErrorContainer,
+    onErrorContainer = OnErrorContainer,
+    background = Background,
+    onBackground = OnBackground,
+    surface = Surface,
+    onSurface = OnSurface,
+    surfaceVariant = SurfaceVariant,
+    onSurfaceVariant = OnSurfaceVariant,
+    surfaceTint = SurfaceTint,
+    inverseSurface = InverseSurface,
+    inverseOnSurface = InverseOnSurface,
+    outline = Outline,
+    outlineVariant = OutlineVariant,
+    surfaceDim = SurfaceDim,
+    surfaceBright = SurfaceBright,
+    surfaceContainerLowest = SurfaceContainerLowest,
+    surfaceContainerLow = SurfaceContainerLow,
+    surfaceContainer = SurfaceContainer,
+    surfaceContainerHigh = SurfaceContainerHigh,
+    surfaceContainerHighest = SurfaceContainerHighest
+    // Los roles "fixed" (primaryFixed, secondaryFixed, tertiaryFixed, etc.) del spec no existen
+    // en la version de Material3 de este proyecto; quedan disponibles como Color sueltos en
+    // Color.kt para usarlos directamente donde se necesiten.
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = EyeBlue40,
-    onPrimary = Color.White,
-    secondary = EyeTeal40,
-    onSecondary = Color.White,
-    tertiary = EyeAmber40,
-    onTertiary = Color.White,
-    background = EyeNeutral99,
-    onBackground = EyeNeutral10,
-    surface = EyeNeutral99,
-    onSurface = EyeNeutral10,
-    surfaceVariant = EyeNeutral95,
-    onSurfaceVariant = EyeNeutral20,
-    error = EyeError40,
-    onError = Color.White,
-)
-
-/**
- * Tema de marca de la app: paleta fija "eye care" (no usamos Material You dinámico) para que la
- * identidad visual sea consistente en cualquier dispositivo.
- */
 @Composable
-fun AplicaciónParaDetectarEnfermedadesVisualesTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
-) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+fun OcuCheckTheme(content: @Composable () -> Unit) {
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            window.statusBarColor = ClinicalColorScheme.surface.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
         }
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = ClinicalColorScheme,
         typography = Typography,
+        shapes = ClinicalShapes,
         content = content
     )
 }

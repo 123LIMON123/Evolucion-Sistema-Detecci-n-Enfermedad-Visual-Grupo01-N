@@ -30,6 +30,8 @@ data class AppStrings(
     val diseaseInfoDescription: String,
     val profileNav: String,
     val profileDescription: String,
+    // medical disclaimer
+    val disclaimerText: String,
     // camera
     val cameraTitle: String,
     val analyzingMessage: String,
@@ -82,6 +84,7 @@ val EsStrings = AppStrings(
     diseaseInfoDescription = "Aprende sobre cada condición ocular",
     profileNav = "Perfil",
     profileDescription = "Tu cuenta y preferencias",
+    disclaimerText = "Esta clasificación es una herramienta de apoyo (triage) generada por IA y no sustituye el examen de un optometrista u oftalmólogo con licencia.",
     cameraTitle = "Analizar ojo",
     analyzingMessage = "Analizando... (asegúrese de tener el modelo en assets)",
     errorPrefix = "Error",
@@ -129,6 +132,7 @@ val EnStrings = AppStrings(
     diseaseInfoDescription = "Learn about each eye condition",
     profileNav = "Profile",
     profileDescription = "Your account and preferences",
+    disclaimerText = "This classification is an AI-assisted triage tool and does not replace an exam by a licensed optometrist or ophthalmologist.",
     cameraTitle = "Analyze eye",
     analyzingMessage = "Analyzing... (make sure the model is in assets)",
     errorPrefix = "Error",

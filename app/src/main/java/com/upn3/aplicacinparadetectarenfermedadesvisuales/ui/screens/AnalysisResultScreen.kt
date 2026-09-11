@@ -1,22 +1,14 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -26,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
@@ -36,15 +27,8 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.RiskHighColor
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.RiskLowColor
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.RiskModerateColor
-
-private fun colorFor(riskLevel: RiskLevel): Color = when (riskLevel) {
-    RiskLevel.BAJO_RIESGO -> RiskLowColor
-    RiskLevel.RIESGO_MODERADO -> RiskModerateColor
-    RiskLevel.SOSPECHA_ALTA -> RiskHighColor
-}
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.ClinicalStatusChip
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.toClinicalTier
 
 private fun labelFor(riskLevel: RiskLevel, strings: AppStrings): String = when (riskLevel) {
     RiskLevel.BAJO_RIESGO -> strings.riskLow
@@ -63,7 +47,7 @@ fun AnalysisResultScreen(
     val strings = LocalAppStrings.current
     val language = LocalAppLanguage.current
     val diseaseName = DiseaseCatalog.byCode(diseaseCode)?.localized(language)?.name ?: diseaseCode
-    val riskColor = colorFor(riskLevel)
+    val tier = riskLevel.toClinicalTier()
 
     Scaffold(
         topBar = {
@@ -87,7 +71,7 @@ fun AnalysisResultScreen(
             Text(text = strings.probableDetection, style = MaterialTheme.typography.titleLarge)
             Text(
                 text = diseaseName,
-                style = MaterialTheme.typography.displayMedium,
+                style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(20.dp))
@@ -97,21 +81,21 @@ fun AnalysisResultScreen(
                     .fillMaxWidth()
                     .height(10.dp)
                     .clip(RoundedCornerShape(50)),
-                color = riskColor,
-                trackColor = riskColor.copy(alpha = 0.15f)
+                color = tier.accent,
+                trackColor = tier.tint
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = "${strings.confidenceLabel}: ${(confidence * 100).toInt()}%", style = MaterialTheme.typography.bodyLarge)
 
             Spacer(modifier = Modifier.height(12.dp))
-            RiskBadge(riskLevel = riskLevel, label = labelFor(riskLevel, strings), color = riskColor)
+            ClinicalStatusChip(tier = tier, label = labelFor(riskLevel, strings))
 
             Spacer(modifier = Modifier.height(48.dp))
 
             Button(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large
+                shape = MaterialTheme.shapes.medium
             ) {
                 Text(strings.newAnalysisAction)
             }
@@ -119,29 +103,10 @@ fun AnalysisResultScreen(
             OutlinedButton(
                 onClick = { navController.navigate("disease_info") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large
+                shape = MaterialTheme.shapes.medium
             ) {
                 Text(strings.moreInfoAction)
             }
         }
-    }
-}
-
-@Composable
-private fun RiskBadge(riskLevel: RiskLevel, label: String, color: Color) {
-    val icon = when (riskLevel) {
-        RiskLevel.BAJO_RIESGO -> Icons.Filled.CheckCircle
-        RiskLevel.RIESGO_MODERADO -> Icons.Filled.Info
-        RiskLevel.SOSPECHA_ALTA -> Icons.Filled.Warning
-    }
-    Row(
-        modifier = Modifier
-            .background(color.copy(alpha = 0.12f), RoundedCornerShape(50))
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(imageVector = icon, contentDescription = null, tint = color)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = label, color = color, style = MaterialTheme.typography.titleMedium)
     }
 }

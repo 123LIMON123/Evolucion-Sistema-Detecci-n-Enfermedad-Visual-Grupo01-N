@@ -1,5 +1,6 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -50,8 +51,9 @@ fun DiseaseInfoScreen(navController: NavController, localizationRepository: Loca
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.large,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = info.name, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)

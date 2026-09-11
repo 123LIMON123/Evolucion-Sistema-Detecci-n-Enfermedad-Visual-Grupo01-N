@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.ProvideLocalization
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.navigation.AppNavHost
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.AplicaciónParaDetectarEnfermedadesVisualesTheme
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.OcuCheckTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val appContainer = (application as EyeDiseaseApp).container
         setContent {
-            AplicaciónParaDetectarEnfermedadesVisualesTheme {
+            OcuCheckTheme {
                 ProvideLocalization(appContainer.localizationRepository) {
                     val navController = rememberNavController()
                     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

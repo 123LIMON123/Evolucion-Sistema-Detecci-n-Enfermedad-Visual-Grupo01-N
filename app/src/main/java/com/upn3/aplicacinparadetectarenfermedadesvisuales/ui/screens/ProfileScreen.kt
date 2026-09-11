@@ -75,7 +75,7 @@ fun ProfileScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
+                shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
                 Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)

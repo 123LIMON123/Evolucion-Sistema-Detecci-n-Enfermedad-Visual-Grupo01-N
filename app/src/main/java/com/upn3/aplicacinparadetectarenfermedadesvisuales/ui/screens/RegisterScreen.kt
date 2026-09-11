@@ -49,7 +49,7 @@ fun RegisterScreen(navController: NavController, userSession: UserSessionReposit
                 navController.popBackStack()
             },
             modifier = Modifier.fillMaxWidth(0.8f),
-            shape = MaterialTheme.shapes.large
+            shape = MaterialTheme.shapes.medium
         ) {
             Text(text = strings.backToLogin)
         }

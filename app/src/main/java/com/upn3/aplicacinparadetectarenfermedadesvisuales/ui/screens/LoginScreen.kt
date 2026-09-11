@@ -84,7 +84,7 @@ fun LoginScreen(navController: NavController, userSession: UserSessionRepository
                     navController.navigate("home")
                 },
                 modifier = Modifier.fillMaxWidth(0.8f),
-                shape = MaterialTheme.shapes.large,
+                shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.primary
