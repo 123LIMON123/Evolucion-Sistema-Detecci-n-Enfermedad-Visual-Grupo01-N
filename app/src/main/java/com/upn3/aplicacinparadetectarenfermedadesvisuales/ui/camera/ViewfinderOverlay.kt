@@ -17,7 +17,8 @@ private const val TICK_COUNT = 8
 private const val TICK_ARC_DEGREES = 14f
 
 /**
- * Scrim con una apertura circular (aro de alineacion) sobre el preview en vivo, para guiar el
+ * [Principio S - SRP] Unica responsabilidad: dibujar el scrim con una apertura circular (aro de
+ * alineacion) sobre el preview en vivo, para guiar el
  * encuadre del ojo. El color del aro refleja [FrameQuality] en tiempo real (no hay deteccion real
  * de parpadeo, solo brillo/nitidez): cian mientras se posiciona/evalua, esmeralda cuando la
  * calidad es buena, ambar cuando esta muy oscuro, con glare o borroso.

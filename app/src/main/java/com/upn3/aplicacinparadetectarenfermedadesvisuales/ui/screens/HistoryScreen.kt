@@ -32,6 +32,10 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.Clinical
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.label
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.toClinicalTier
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: listar los analisis guardados en
+ * [AnalysisHistoryRepository]. No calcula resultados ni corre inferencia, solo los muestra.
+ */
 @Composable
 fun HistoryScreen(
     navController: NavController,

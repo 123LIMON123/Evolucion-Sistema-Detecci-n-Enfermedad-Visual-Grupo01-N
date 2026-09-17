@@ -14,6 +14,10 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.ProvideLocalizati
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.navigation.AppNavHost
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.OcuCheckTheme
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: punto de entrada de Android que arma el arbol de
+ * Compose raiz (tema, localizacion, NavHost). No contiene logica de pantallas ni de negocio.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -40,19 +40,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.DiseaseCatalog
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.camera.CameraPreview
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.camera.FrameQuality
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.camera.ViewfinderOverlay
@@ -69,9 +73,11 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.AnalysisU
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAnalysisViewModel
 
 /**
- * Unica responsabilidad: presentar el flujo de captura/analisis y reaccionar al [AnalysisUiState]
- * y al [FrameQuality] del ViewModel. No preprocesa imagenes, no corre inferencia y no aplica
- * reglas clinicas: solo delega en el ViewModel y renderiza lo que este expone.
+ * [Principio S - SRP] Unica responsabilidad: orquestar el estado de la pantalla de camara
+ * (permiso de camara, foto subida, disclaimer visible, ultimo resultado retenido) y conectar el
+ * [CameraAnalysisViewModel] con las subsecciones visuales de mas abajo. No dibuja directamente
+ * la camara ni el panel de resultados: eso vive en composables separados, cada uno con su propia
+ * responsabilidad unica.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -177,170 +183,250 @@ fun CameraScreen(
     ) { innerPadding ->
         if (hasCameraPermission) {
             Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                    if (uploadedImage != null) {
-                        Image(
-                            bitmap = uploadedImage!!.asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        CameraPreview(onFrameCaptured = { bitmap, rotation -> viewModel.onFrameCaptured(bitmap, rotation) })
-                        ViewfinderOverlay(ringColor = ringColor, modifier = Modifier.fillMaxSize())
+                CameraViewfinderSection(
+                    uploadedImage = uploadedImage,
+                    ringColor = ringColor,
+                    qualityHint = qualityHint,
+                    showDisclaimer = showDisclaimer,
+                    disclaimerText = strings.disclaimerText,
+                    disclaimerDismissLabel = strings.disclaimerDismiss,
+                    onDismissDisclaimer = { showDisclaimer = false },
+                    onFrameCaptured = { bitmap, rotation -> viewModel.onFrameCaptured(bitmap, rotation) },
+                    modifier = Modifier.weight(1f).fillMaxWidth()
+                )
 
-                        Text(
-                            text = qualityHint,
-                            color = androidx.compose.ui.graphics.Color.White,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = 24.dp)
-                                .background(ringColor.copy(alpha = 0.9f), RoundedCornerShape(50))
-                                .padding(horizontal = 18.dp, vertical = 8.dp)
-                        )
+                CameraResultsPanel(
+                    lastSuccess = lastSuccess,
+                    isAnalyzing = uiState is AnalysisUiState.Analyzing,
+                    errorMessage = (uiState as? AnalysisUiState.Failed)?.message,
+                    language = language,
+                    strings = strings,
+                    hasUploadedImage = uploadedImage != null,
+                    onViewDetail = { goToResultDetail() },
+                    onPickPhoto = { gallerySelector.launch("image/*") },
+                    onBackToLiveCamera = {
+                        uploadedImage = null
+                        lastSuccess = null
+                        viewModel.resetToIdle()
                     }
-
-                    if (showDisclaimer) {
-                        MedicalDisclaimerBanner(
-                            text = strings.disclaimerText,
-                            dismissLabel = strings.disclaimerDismiss,
-                            onDismiss = { showDisclaimer = false },
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(16.dp)
-                        )
-                    }
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 190.dp)
-                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                        .padding(20.dp)
-                ) {
-                    val successToShow = lastSuccess
-                    val errorMessage = (uiState as? AnalysisUiState.Failed)?.message
-
-                    when {
-                        successToShow != null -> {
-                            val topResult = successToShow.results.firstOrNull()
-                            if (topResult != null) {
-                                val topDiseaseName = DiseaseCatalog.byCode(topResult.code)?.localized(language)?.name
-                                    ?: topResult.code
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(text = topDiseaseName, style = MaterialTheme.typography.titleMedium)
-                                        if (uiState is AnalysisUiState.Analyzing) {
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(14.dp),
-                                                strokeWidth = 2.dp,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
-                                    }
-                                    ClinicalStatusChip(
-                                        tier = topResult.riskLevel.toClinicalTier(),
-                                        label = topResult.riskLevel.label(strings)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                            }
-
-                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                successToShow.results.take(3).forEach { result ->
-                                    val diseaseName = DiseaseCatalog.byCode(result.code)?.localized(language)?.name
-                                        ?: result.code
-                                    ProbabilityMeterRow(name = diseaseName, confidence = result.confidence)
-                                }
-                            }
-
-                            Button(
-                                onClick = { goToResultDetail() },
-                                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                                shape = MaterialTheme.shapes.medium
-                            ) {
-                                Text(strings.viewDetail)
-                            }
-                        }
-                        errorMessage != null -> {
-                            Text(
-                                text = "${strings.errorPrefix}: $errorMessage",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                        else -> {
-                            Text(
-                                text = strings.analyzingMessage,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    }
-
-                    Button(
-                        onClick = { gallerySelector.launch("image/*") },
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Text(if (uploadedImage == null) strings.uploadPhoto else strings.uploadAnotherPhoto)
-                    }
-
-                    if (uploadedImage != null) {
-                        OutlinedButton(
-                            onClick = {
-                                uploadedImage = null
-                                lastSuccess = null
-                                viewModel.resetToIdle()
-                            },
-                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                            shape = MaterialTheme.shapes.medium
-                        ) {
-                            Text(strings.backToLiveCamera)
-                        }
-                    }
-                }
+                )
             }
         } else {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(strings.cameraPermissionRequired)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { gallerySelector.launch("image/*") }, shape = MaterialTheme.shapes.medium) {
-                        Text(strings.uploadPhotoInstead)
-                    }
+            CameraPermissionDeniedContent(
+                strings = strings,
+                language = language,
+                uploadedImage = uploadedImage,
+                successState = uiState as? AnalysisUiState.Success,
+                onPickPhoto = { gallerySelector.launch("image/*") },
+                onViewDetail = { goToResultDetail() },
+                modifier = Modifier.fillMaxSize().padding(innerPadding)
+            )
+        }
+    }
+}
 
-                    if (uploadedImage != null) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Image(
-                            bitmap = uploadedImage!!.asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier.height(200.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                        val successState = uiState as? AnalysisUiState.Success
-                        successState?.results?.take(3)?.forEach { result ->
-                            val diseaseName = DiseaseCatalog.byCode(result.code)?.localized(language)?.name
-                                ?: result.code
-                            Text(text = "$diseaseName: ${(result.confidence * 100).toInt()}%")
-                        }
-                        if (successState != null && successState.results.isNotEmpty()) {
-                            Button(onClick = { goToResultDetail() }, shape = MaterialTheme.shapes.medium) {
-                                Text(strings.viewDetail)
+/**
+ * [Principio S - SRP] Unica responsabilidad: mostrar el feed de camara en vivo (o la foto
+ * subida) junto con la guia de encuadre (aro + texto de calidad) y el disclaimer medico. No sabe
+ * nada del resultado del analisis de enfermedad ni de como se calcula.
+ */
+@Composable
+private fun CameraViewfinderSection(
+    uploadedImage: Bitmap?,
+    ringColor: Color,
+    qualityHint: String,
+    showDisclaimer: Boolean,
+    disclaimerText: String,
+    disclaimerDismissLabel: String,
+    onDismissDisclaimer: () -> Unit,
+    onFrameCaptured: (Bitmap, Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        if (uploadedImage != null) {
+            Image(
+                bitmap = uploadedImage.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            CameraPreview(onFrameCaptured = onFrameCaptured)
+            ViewfinderOverlay(ringColor = ringColor, modifier = Modifier.fillMaxSize())
+
+            Text(
+                text = qualityHint,
+                color = Color.White,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 24.dp)
+                    .background(ringColor.copy(alpha = 0.9f), RoundedCornerShape(50))
+                    .padding(horizontal = 18.dp, vertical = 8.dp)
+            )
+        }
+
+        if (showDisclaimer) {
+            MedicalDisclaimerBanner(
+                text = disclaimerText,
+                dismissLabel = disclaimerDismissLabel,
+                onDismiss = onDismissDisclaimer,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(16.dp)
+            )
+        }
+    }
+}
+
+/**
+ * [Principio S - SRP] Unica responsabilidad: mostrar el resultado del ultimo analisis exitoso
+ * (o su ausencia/error) y las acciones de captura (subir foto, volver a la camara en vivo). No
+ * sabe nada de la camara, del encuadre ni de permisos.
+ */
+@Composable
+private fun CameraResultsPanel(
+    lastSuccess: AnalysisUiState.Success?,
+    isAnalyzing: Boolean,
+    errorMessage: String?,
+    language: AppLanguage,
+    strings: AppStrings,
+    hasUploadedImage: Boolean,
+    onViewDetail: () -> Unit,
+    onPickPhoto: () -> Unit,
+    onBackToLiveCamera: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 190.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            .padding(20.dp)
+    ) {
+        when {
+            lastSuccess != null -> {
+                val topResult = lastSuccess.results.firstOrNull()
+                if (topResult != null) {
+                    val topDiseaseName = DiseaseCatalog.byCode(topResult.code)?.localized(language)?.name
+                        ?: topResult.code
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = topDiseaseName, style = MaterialTheme.typography.titleMedium)
+                            if (isAnalyzing) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(14.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
                         }
+                        ClinicalStatusChip(
+                            tier = topResult.riskLevel.toClinicalTier(),
+                            label = topResult.riskLevel.label(strings)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    lastSuccess.results.take(3).forEach { result ->
+                        val diseaseName = DiseaseCatalog.byCode(result.code)?.localized(language)?.name
+                            ?: result.code
+                        ProbabilityMeterRow(name = diseaseName, confidence = result.confidence)
+                    }
+                }
+
+                Button(
+                    onClick = onViewDetail,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text(strings.viewDetail)
+                }
+            }
+            errorMessage != null -> {
+                Text(
+                    text = "${strings.errorPrefix}: $errorMessage",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+            else -> {
+                Text(
+                    text = strings.analyzingMessage,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+
+        Button(
+            onClick = onPickPhoto,
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Text(if (!hasUploadedImage) strings.uploadPhoto else strings.uploadAnotherPhoto)
+        }
+
+        if (hasUploadedImage) {
+            OutlinedButton(
+                onClick = onBackToLiveCamera,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Text(strings.backToLiveCamera)
+            }
+        }
+    }
+}
+
+/**
+ * [Principio S - SRP] Unica responsabilidad: pantalla de respaldo cuando no hay permiso de
+ * camara (pedir el permiso o dejar subir una foto en su lugar). No conoce el flujo de camara en
+ * vivo ni el panel de resultados normal.
+ */
+@Composable
+private fun CameraPermissionDeniedContent(
+    strings: AppStrings,
+    language: AppLanguage,
+    uploadedImage: Bitmap?,
+    successState: AnalysisUiState.Success?,
+    onPickPhoto: () -> Unit,
+    onViewDetail: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(strings.cameraPermissionRequired)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onPickPhoto, shape = MaterialTheme.shapes.medium) {
+                Text(strings.uploadPhotoInstead)
+            }
+
+            if (uploadedImage != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Image(
+                    bitmap = uploadedImage.asImageBitmap(),
+                    contentDescription = null,
+                    modifier = Modifier.height(200.dp),
+                    contentScale = ContentScale.Fit
+                )
+                successState?.results?.take(3)?.forEach { result ->
+                    val diseaseName = DiseaseCatalog.byCode(result.code)?.localized(language)?.name
+                        ?: result.code
+                    Text(text = "$diseaseName: ${(result.confidence * 100).toInt()}%")
+                }
+                if (successState != null && successState.results.isNotEmpty()) {
+                    Button(onClick = onViewDetail, shape = MaterialTheme.shapes.medium) {
+                        Text(strings.viewDetail)
                     }
                 }
             }

@@ -9,7 +9,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// El design system "OcuCheck AI" define un unico esquema clinico claro (sin variante oscura):
+// [Principio S - SRP] Unica responsabilidad de este archivo: ensamblar el ColorScheme de
+// Material3 a partir de los tokens de Color.kt y exponer el composable de tema de la app. El
+// design system "OcuCheck AI" define un unico esquema clinico claro (sin variante oscura):
 // pensado para consultorios/clinicas con buena iluminacion donde la legibilidad y la calma visual
 // priman sobre la adaptacion al tema del sistema.
 private val ClinicalColorScheme = lightColorScheme(

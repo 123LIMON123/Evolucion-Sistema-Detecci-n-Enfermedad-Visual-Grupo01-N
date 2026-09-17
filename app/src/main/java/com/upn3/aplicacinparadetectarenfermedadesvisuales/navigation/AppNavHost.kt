@@ -18,6 +18,10 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.ProfileScre
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.RegisterScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAnalysisViewModel
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: definir el grafo de navegacion (que ruta muestra
+ * que pantalla y con que argumentos). No dibuja UI propia ni contiene logica de negocio.
+ */
 @Composable
 fun AppNavHost(navController: NavHostController, appContainer: AppContainer) {
     val cameraAnalysisViewModel: CameraAnalysisViewModel = viewModel(

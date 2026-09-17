@@ -30,6 +30,11 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.Clinical
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.label
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.toClinicalTier
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: mostrar el veredicto de un unico resultado de
+ * analisis ya calculado (nombre, confianza, nivel de riesgo). No corre inferencia ni interpreta
+ * umbrales clinicos; solo recibe los datos y los presenta.
+ */
 @Composable
 fun AnalysisResultScreen(
     navController: NavController,

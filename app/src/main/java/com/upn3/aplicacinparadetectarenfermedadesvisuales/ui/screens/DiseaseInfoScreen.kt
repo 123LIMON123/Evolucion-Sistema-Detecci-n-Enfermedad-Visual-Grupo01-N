@@ -26,6 +26,10 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: listar el catalogo de enfermedades ([DiseaseCatalog])
+ * en el idioma activo. No sabe de camara, inferencia ni historial.
+ */
 @Composable
 fun DiseaseInfoScreen(navController: NavController, localizationRepository: LocalizationRepository) {
     val strings = LocalAppStrings.current

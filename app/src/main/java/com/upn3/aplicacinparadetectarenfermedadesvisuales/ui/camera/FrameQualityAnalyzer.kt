@@ -10,40 +10,49 @@ enum class FrameQuality {
     GOOD
 }
 
+/** Version reducida y en escala de grises de un frame, lista para que una [FrameQualityRule] la evalue. */
+data class LuminanceSample(val luminance: IntArray, val size: Int)
+
 /**
- * Unica responsabilidad: decidir si un frame de camara tiene suficiente luz y nitidez para
- * intentar un analisis (guia de encuadre). No sabe nada de enfermedades ni del modelo TFLite;
- * solo mide brillo promedio y una varianza de laplaciano como heuristica de nitidez sobre una
- * copia reducida del frame (barato de calcular a 1 fps).
- *
- * Los umbrales son heuristicos y pueden necesitar ajuste por dispositivo/camara; priorizan no
- * bloquear la captura por falsos positivos de "borroso" antes que ser estrictos.
+ * [Principio O - OCP] Este es el punto de extension: para agregar un chequeo nuevo (por ejemplo
+ * deteccion de glare/reflejo, o "no se detecta un ojo") se escribe una clase nueva que implemente
+ * esta interfaz y se agrega a la lista de [FrameQualityAnalyzer]. No hace falta tocar el codigo
+ * de [FrameQualityAnalyzer] ni el de las reglas existentes (TooDarkRule, TooBrightRule, etc.):
+ * la clase queda "cerrada a modificacion, abierta a extension".
  */
-class FrameQualityAnalyzer {
+fun interface FrameQualityRule {
+    /** Devuelve el problema detectado, o `null` si esta regla no encuentra nada malo. */
+    fun evaluate(sample: LuminanceSample): FrameQuality?
+}
 
-    fun analyze(bitmap: Bitmap): FrameQuality {
-        val sample = Bitmap.createScaledBitmap(bitmap, SAMPLE_SIZE, SAMPLE_SIZE, true)
-        val pixels = IntArray(SAMPLE_SIZE * SAMPLE_SIZE)
-        sample.getPixels(pixels, 0, SAMPLE_SIZE, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
+/** Marca [FrameQuality.TOO_DARK] cuando el brillo promedio esta por debajo del umbral. */
+class TooDarkRule(private val threshold: Double = 55.0) : FrameQualityRule {
+    override fun evaluate(sample: LuminanceSample): FrameQuality? {
+        val brightness = sample.luminance.average()
+        return if (brightness < threshold) FrameQuality.TOO_DARK else null
+    }
+}
 
-        val luminance = IntArray(pixels.size) { i ->
-            val pixel = pixels[i]
-            val r = (pixel shr 16) and 0xFF
-            val g = (pixel shr 8) and 0xFF
-            val b = pixel and 0xFF
-            (0.299 * r + 0.587 * g + 0.114 * b).toInt()
-        }
+/** Marca [FrameQuality.TOO_BRIGHT] cuando hay demasiado brillo o reflejo (glare simple). */
+class TooBrightRule(private val threshold: Double = 205.0) : FrameQualityRule {
+    override fun evaluate(sample: LuminanceSample): FrameQuality? {
+        val brightness = sample.luminance.average()
+        return if (brightness > threshold) FrameQuality.TOO_BRIGHT else null
+    }
+}
 
-        val brightness = luminance.average()
-        return when {
-            brightness < DARK_THRESHOLD -> FrameQuality.TOO_DARK
-            brightness > BRIGHT_THRESHOLD -> FrameQuality.TOO_BRIGHT
-            laplacianVariance(luminance, SAMPLE_SIZE) < SHARPNESS_THRESHOLD -> FrameQuality.BLURRY
-            else -> FrameQuality.GOOD
-        }
+/**
+ * Marca [FrameQuality.BLURRY] usando la varianza de un filtro laplaciano como heuristica de
+ * nitidez: una imagen nitida tiene bordes marcados (varianza alta), una borrosa los suaviza.
+ */
+class BlurryRule(private val threshold: Double = 90.0) : FrameQualityRule {
+    override fun evaluate(sample: LuminanceSample): FrameQuality? {
+        return if (laplacianVariance(sample) < threshold) FrameQuality.BLURRY else null
     }
 
-    private fun laplacianVariance(luminance: IntArray, size: Int): Double {
+    private fun laplacianVariance(sample: LuminanceSample): Double {
+        val luminance = sample.luminance
+        val size = sample.size
         val laplacian = DoubleArray(luminance.size)
         for (y in 1 until size - 1) {
             for (x in 1 until size - 1) {
@@ -58,11 +67,46 @@ class FrameQualityAnalyzer {
         val mean = laplacian.average()
         return laplacian.sumOf { (it - mean) * (it - mean) } / laplacian.size
     }
+}
+
+/**
+ * [Principio S - SRP] Unica responsabilidad: decidir si un frame de camara tiene suficiente luz y
+ * nitidez para intentar un analisis (guia de encuadre). No sabe nada de enfermedades ni del
+ * modelo TFLite; solo reduce el frame a una muestra de luminancia y se la pasa a sus [rules].
+ *
+ * [Principio O - OCP] Cerrado a modificacion: esta clase no cambia cuando se agrega un chequeo
+ * nuevo. Abierto a extension: quien la construye (ver `AppContainer`) puede pasarle una lista de
+ * reglas distinta (agregar una nueva, sacar una, reordenarlas) sin editar este archivo.
+ */
+class FrameQualityAnalyzer(
+    private val rules: List<FrameQualityRule> = listOf(TooDarkRule(), TooBrightRule(), BlurryRule())
+) {
+
+    fun analyze(bitmap: Bitmap): FrameQuality {
+        val sample = sampleLuminance(bitmap)
+        for (rule in rules) {
+            val issue = rule.evaluate(sample)
+            if (issue != null) return issue
+        }
+        return FrameQuality.GOOD
+    }
+
+    private fun sampleLuminance(bitmap: Bitmap): LuminanceSample {
+        val scaled = Bitmap.createScaledBitmap(bitmap, SAMPLE_SIZE, SAMPLE_SIZE, true)
+        val pixels = IntArray(SAMPLE_SIZE * SAMPLE_SIZE)
+        scaled.getPixels(pixels, 0, SAMPLE_SIZE, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
+
+        val luminance = IntArray(pixels.size) { i ->
+            val pixel = pixels[i]
+            val r = (pixel shr 16) and 0xFF
+            val g = (pixel shr 8) and 0xFF
+            val b = pixel and 0xFF
+            (0.299 * r + 0.587 * g + 0.114 * b).toInt()
+        }
+        return LuminanceSample(luminance, SAMPLE_SIZE)
+    }
 
     private companion object {
         const val SAMPLE_SIZE = 64
-        const val DARK_THRESHOLD = 55.0
-        const val BRIGHT_THRESHOLD = 205.0
-        const val SHARPNESS_THRESHOLD = 90.0
     }
 }

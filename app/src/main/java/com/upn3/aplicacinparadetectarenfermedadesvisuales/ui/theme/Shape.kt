@@ -4,8 +4,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
-// Tokens "rounded" del design system: sm=4, DEFAULT=8, md=12, lg=16, xl=24, full=pill.
-// Botones/inputs usan md (12dp), tarjetas/modales usan lg (16dp) segun el spec.
+// [Principio S - SRP] Unica responsabilidad de este archivo: declarar los tokens "rounded" del
+// design system (sm=4, DEFAULT=8, md=12, lg=16, xl=24, full=pill). Botones/inputs usan md (12dp),
+// tarjetas/modales usan lg (16dp) segun el spec.
 val ClinicalShapes = Shapes(
     extraSmall = RoundedCornerShape(4.dp),
     small = RoundedCornerShape(8.dp),

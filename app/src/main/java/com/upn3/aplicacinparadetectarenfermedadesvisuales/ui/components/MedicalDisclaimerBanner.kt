@@ -24,7 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 
 /**
- * Aviso fijo de que la clasificacion es una herramienta de apoyo (triage), no un diagnostico
+ * [Principio S - SRP] Unica responsabilidad: mostrar el aviso de que la clasificacion es una
+ * herramienta de apoyo (triage), no un diagnostico
  * medico definitivo. Se muestra en los puntos donde el usuario ve un resultado de IA.
  *
  * El Row exterior usa height(IntrinsicSize.Min): sin eso, el Spacer del acento izquierdo con

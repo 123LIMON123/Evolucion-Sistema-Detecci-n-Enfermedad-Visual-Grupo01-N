@@ -10,15 +10,16 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.MedicalDiagnost
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.EyeDiseaseClassifier
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.ImagePreprocessingSpec
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.ImagePreprocessor
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.PixelNormalization
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.Raw0To255Normalization
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.TFLiteDiseaseClassifier
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.camera.FrameQualityAnalyzer
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAnalysisViewModel
 
 /**
- * Composition root manual (sin Hilt/Koin en el proyecto): unico lugar que conoce como se conectan
- * las implementaciones concretas de cada capa. Nadie mas en la app instancia TFLiteDiseaseClassifier
- * ni conoce el nombre del asset del modelo.
+ * [Principio S - SRP] Unica responsabilidad: cablear (instanciar y conectar) las implementaciones
+ * concretas de cada capa. Composition root manual (sin Hilt/Koin en el proyecto): unico lugar que
+ * conoce como se conectan las implementaciones concretas de cada capa. Nadie mas en la app
+ * instancia TFLiteDiseaseClassifier ni conoce el nombre del asset del modelo.
  */
 class AppContainer(context: Context) {
 
@@ -34,7 +35,7 @@ class AppContainer(context: Context) {
             targetHeight = MODEL_INPUT_SIZE,
             // El modelo trae el preprocess_input de MobileNetV2 horneado en el grafo, por lo que
             // espera pixeles crudos [0, 255]. Normalizar aca tambien normalizaria dos veces.
-            normalization = PixelNormalization.RAW_0_255
+            normalization = Raw0To255Normalization
         )
     )
 
@@ -46,6 +47,9 @@ class AppContainer(context: Context) {
 
     val diagnosticInterpreter: MedicalDiagnosticInterpreter = MedicalDiagnosticInterpreter()
 
+    // [Principio O - OCP] Usa la lista de reglas por defecto (oscuro/brillo/borroso). Para sumar
+    // un chequeo nuevo (ej. deteccion de glare) se le pasa una lista con esa regla agregada aca,
+    // sin tocar FrameQualityAnalyzer.
     val frameQualityAnalyzer: FrameQualityAnalyzer = FrameQualityAnalyzer()
 
     val historyRepository: AnalysisHistoryRepository = AnalysisHistoryRepository()
@@ -55,6 +59,10 @@ class AppContainer(context: Context) {
     val localizationRepository: LocalizationRepository = LocalizationRepository()
 }
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: saber como construir un [CameraAnalysisViewModel]
+ * con sus dependencias del [AppContainer]. Es lo unico en la app que llama a su constructor.
+ */
 class CameraAnalysisViewModelFactory(
     private val appContainer: AppContainer
 ) : ViewModelProvider.Factory {

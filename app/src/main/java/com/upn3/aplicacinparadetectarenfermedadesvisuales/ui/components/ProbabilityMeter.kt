@@ -17,9 +17,10 @@ import androidx.compose.ui.unit.sp
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.StatBadgeTextStyle
 
 /**
- * Una fila del "Multi-Class Probability Breakdown Meter": nombre de la condicion, valor de
- * confianza (estilo stat-badge compacto) y una barra de progreso cuyo color cambia segun el
- * umbral de sospecha clinica (no confundir con el umbral de riesgo del veredicto principal).
+ * [Principio S - SRP] Unica responsabilidad: dibujar una fila del "Multi-Class Probability
+ * Breakdown Meter": nombre de la condicion, valor de confianza (estilo stat-badge compacto) y una
+ * barra de progreso cuyo color cambia segun el umbral de sospecha clinica (no confundir con el
+ * umbral de riesgo del veredicto principal).
  */
 @Composable
 fun ProbabilityMeterRow(name: String, confidence: Float, modifier: Modifier = Modifier) {

@@ -1,7 +1,8 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n
 
 /**
- * Catalogo unico de textos de UI en espanol e ingles. Todas las pantallas leen de aqui (via
+ * [Principio S - SRP] Unica responsabilidad: ser el catalogo unico de textos de UI en espanol e
+ * ingles. Todas las pantallas leen de aqui (via
  * [LocalAppStrings]) en lugar de tener texto suelto embebido, para que agregar/editar un idioma
  * sea un cambio en un solo archivo.
  */

@@ -20,6 +20,8 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.ClinicalTier
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.PillShape
 
+// [Principio S - SRP] Unica responsabilidad de estos mappers: traducir un RiskLevel de dominio a
+// su representacion visual (tier de color, texto localizado). No dibujan nada.
 fun RiskLevel.toClinicalTier(): ClinicalTier = when (this) {
     RiskLevel.BAJO_RIESGO -> ClinicalTier.HEALTHY
     RiskLevel.RIESGO_MODERADO -> ClinicalTier.WARNING
@@ -41,6 +43,10 @@ fun probabilityMeterTier(confidence: Float): ClinicalTier = when {
     else -> ClinicalTier.HEALTHY
 }
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: dibujar el chip de estado clinico (punto + texto
+ * uppercase) dado un tier y una etiqueta ya resueltos. No sabe de donde viene el tier.
+ */
 @Composable
 fun ClinicalStatusChip(tier: ClinicalTier, label: String, modifier: Modifier = Modifier) {
     Row(

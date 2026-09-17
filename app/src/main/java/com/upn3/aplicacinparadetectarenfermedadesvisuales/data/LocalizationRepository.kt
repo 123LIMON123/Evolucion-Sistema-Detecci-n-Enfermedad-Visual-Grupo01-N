@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Unica razon para cambiar: como se guarda/expone el idioma preferido de la UI. No sabe nada de
- * los textos en si (eso vive en el catalogo de strings), solo de cual esta activo.
+ * Unica razón para cambiar: como se guarda/expone el idioma preferido de la UI. No sabe nada de
+ * los textos en si (eso vive en el catálogo de strings), solo de cual está activo.
  */
 class LocalizationRepository(initialLanguage: AppLanguage = AppLanguage.ES) {
 

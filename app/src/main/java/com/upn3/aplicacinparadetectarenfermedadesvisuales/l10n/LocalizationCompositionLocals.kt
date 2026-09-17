@@ -11,7 +11,8 @@ val LocalAppLanguage = compositionLocalOf { AppLanguage.ES }
 val LocalAppStrings = compositionLocalOf { EsStrings }
 
 /**
- * Expone el idioma activo y sus strings a todo el arbol de composicion, para no tener que pasar
+ * [Principio S - SRP] Unica responsabilidad: exponer el idioma activo y sus strings a todo el
+ * arbol de composicion, para no tener que pasar
  * [LocalizationRepository] como parametro a cada pantalla. Un solo punto de wiring (MainActivity).
  */
 @Composable

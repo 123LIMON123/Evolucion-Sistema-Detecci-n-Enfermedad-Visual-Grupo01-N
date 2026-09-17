@@ -2,9 +2,10 @@ package com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Tokens de color del design system "OcuCheck AI" (paleta clinica, un solo esquema claro:
-// la marca esta pensada para consultorios/clinicas con buena iluminacion, no hay variante oscura
-// definida en el spec).
+// [Principio S - SRP] Unica responsabilidad de este archivo: declarar los tokens de color del
+// design system "OcuCheck AI" (paleta clinica, un solo esquema claro: la marca esta pensada para
+// consultorios/clinicas con buena iluminacion, no hay variante oscura definida en el spec). No
+// arma ColorScheme ni sabe donde se usa cada color; eso vive en Theme.kt.
 val Surface = Color(0xFFF7F9FB)
 val SurfaceDim = Color(0xFFD8DADC)
 val SurfaceBright = Color(0xFFF7F9FB)

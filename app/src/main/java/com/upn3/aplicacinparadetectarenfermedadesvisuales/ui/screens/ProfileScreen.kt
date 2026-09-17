@@ -30,6 +30,10 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: mostrar los datos del usuario en sesion y permitir
+ * cerrar sesion. No sabe nada de camara, analisis ni historial.
+ */
 @Composable
 fun ProfileScreen(
     navController: NavController,

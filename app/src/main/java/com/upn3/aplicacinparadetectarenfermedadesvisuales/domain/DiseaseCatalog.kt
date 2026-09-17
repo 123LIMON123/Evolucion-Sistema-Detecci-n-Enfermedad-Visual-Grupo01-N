@@ -3,7 +3,8 @@ package com.upn3.aplicacinparadetectarenfermedadesvisuales.domain
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppLanguage
 
 /**
- * Fuente unica de verdad para los metadatos clinicos/descriptivos de cada enfermedad (nombre,
+ * [Principio S - SRP] Unica responsabilidad: ser la fuente unica de verdad para los metadatos
+ * clinicos/descriptivos de cada enfermedad (nombre,
  * descripcion, sintomas, recomendacion), en espanol e ingles. Antes esta informacion estaba
  * duplicada entre el mapeo de codigos del clasificador y la pantalla de informacion; ahora todos
  * leen de aqui, y el idioma se resuelve en el momento de mostrarla, no al calcularla.

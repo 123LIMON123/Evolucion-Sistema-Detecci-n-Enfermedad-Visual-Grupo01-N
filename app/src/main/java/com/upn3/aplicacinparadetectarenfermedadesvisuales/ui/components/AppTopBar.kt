@@ -20,8 +20,9 @@ import androidx.compose.ui.unit.dp
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppLanguage
 
 /**
- * Barra superior compartida por todas las pantallas: mismo estilo de marca y el mismo control de
- * idioma en el mismo lugar, en vez de que cada pantalla arme su propio TopAppBar.
+ * [Principio S - SRP] Unica responsabilidad: renderizar la barra superior compartida por todas
+ * las pantallas (titulo, boton volver, toggle de idioma), con el mismo estilo de marca en el
+ * mismo lugar, en vez de que cada pantalla arme su propio TopAppBar.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

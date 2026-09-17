@@ -6,26 +6,50 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * Estrategia de normalizacion de pixeles. Distintos modelos esperan distintos rangos de entrada;
- * quien conoce cual usar es quien construye el [ImagePreprocessor] (capa de inferencia / composicion),
- * no el preprocesador en si.
+ * [Principio O - OCP] Estrategia de normalizacion de pixeles. Antes esto era un `enum` con un
+ * `when` adentro de [ImagePreprocessor]: para sumar un rango de normalizacion nuevo habia que
+ * editar el enum Y el `when`. Como interfaz, un modelo nuevo con un rango de entrada distinto
+ * (ej. [-128, 127] para un modelo cuantizado int8) se soporta escribiendo una clase nueva, sin
+ * tocar [ImagePreprocessor] ni las estrategias existentes.
  */
-enum class PixelNormalization {
-    RAW_0_255,
-    ZERO_TO_ONE,
-    MINUS_ONE_TO_ONE
+fun interface PixelNormalizationStrategy {
+    fun normalize(r: Int, g: Int, b: Int): Triple<Float, Float, Float>
+}
+
+/** Pixeles tal cual [0, 255]. Para modelos que ya incluyen su propio `preprocess_input` en el grafo. */
+object Raw0To255Normalization : PixelNormalizationStrategy {
+    override fun normalize(r: Int, g: Int, b: Int) = Triple(r.toFloat(), g.toFloat(), b.toFloat())
+}
+
+/** Pixeles escalados a [0, 1]. */
+object ZeroToOneNormalization : PixelNormalizationStrategy {
+    override fun normalize(r: Int, g: Int, b: Int) = Triple(r / 255f, g / 255f, b / 255f)
+}
+
+/** Pixeles centrados en [-1, 1] (comun en redes tipo MobileNet entrenadas "desde cero"). */
+object MinusOneToOneNormalization : PixelNormalizationStrategy {
+    override fun normalize(r: Int, g: Int, b: Int) = Triple(
+        (r / 127.5f) - 1f,
+        (g / 127.5f) - 1f,
+        (b / 127.5f) - 1f
+    )
 }
 
 data class ImagePreprocessingSpec(
     val targetWidth: Int,
     val targetHeight: Int,
-    val normalization: PixelNormalization
+    val normalization: PixelNormalizationStrategy
 )
 
 /**
- * Unica razon para cambiar: el formato/hardware de entrada (tamano de imagen, tipo de normalizacion
- * de pixeles, correccion de rotacion). No conoce el modelo de TFLite ni las enfermedades que se
- * analizan; solo transforma un [Bitmap] en un [ByteBuffer] Float32 listo para inferencia.
+ * [Principio S - SRP] Unica razon para cambiar: el formato/hardware de entrada (tamano de imagen,
+ * tipo de normalizacion de pixeles, correccion de rotacion). No conoce el modelo de TFLite ni las
+ * enfermedades que se analizan; solo transforma un [Bitmap] en un [ByteBuffer] Float32 listo para
+ * inferencia.
+ *
+ * [Principio O - OCP] No necesita conocer todas las estrategias de normalizacion posibles: recibe
+ * una via [ImagePreprocessingSpec] y solo la ejecuta. Queda cerrada a modificacion aunque el
+ * catalogo de estrategias siga creciendo.
  */
 class ImagePreprocessor(private val spec: ImagePreprocessingSpec) {
 
@@ -50,28 +74,16 @@ class ImagePreprocessor(private val spec: ImagePreprocessingSpec) {
         bitmap.getPixels(pixels, 0, spec.targetWidth, 0, 0, spec.targetWidth, spec.targetHeight)
 
         for (pixel in pixels) {
-            val (r, g, b) = normalize(pixel)
-            buffer.putFloat(r)
-            buffer.putFloat(g)
-            buffer.putFloat(b)
+            val r = (pixel shr 16) and 0xFF
+            val g = (pixel shr 8) and 0xFF
+            val b = pixel and 0xFF
+            val (nr, ng, nb) = spec.normalization.normalize(r, g, b)
+            buffer.putFloat(nr)
+            buffer.putFloat(ng)
+            buffer.putFloat(nb)
         }
         buffer.rewind()
         return buffer
-    }
-
-    private fun normalize(pixel: Int): Triple<Float, Float, Float> {
-        val r = (pixel shr 16) and 0xFF
-        val g = (pixel shr 8) and 0xFF
-        val b = pixel and 0xFF
-        return when (spec.normalization) {
-            PixelNormalization.RAW_0_255 -> Triple(r.toFloat(), g.toFloat(), b.toFloat())
-            PixelNormalization.ZERO_TO_ONE -> Triple(r / 255f, g / 255f, b / 255f)
-            PixelNormalization.MINUS_ONE_TO_ONE -> Triple(
-                (r / 127.5f) - 1f,
-                (g / 127.5f) - 1f,
-                (b / 127.5f) - 1f
-            )
-        }
     }
 
     private companion object {

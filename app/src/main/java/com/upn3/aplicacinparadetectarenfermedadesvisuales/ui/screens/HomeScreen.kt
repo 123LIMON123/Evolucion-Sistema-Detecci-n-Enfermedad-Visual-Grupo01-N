@@ -47,6 +47,10 @@ private data class HomeMenuItem(
     val route: String
 )
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: mostrar el menu principal de navegacion (nuevo
+ * analisis, historial, enfermedades, perfil). No contiene logica de negocio ni de otras pantallas.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController, localizationRepository: LocalizationRepository) {
@@ -117,6 +121,7 @@ fun HomeScreen(navController: NavController, localizationRepository: Localizatio
     }
 }
 
+/** [Principio S - SRP] Unica responsabilidad: dibujar una tarjeta de menu del Home. */
 @Composable
 private fun HomeMenuCard(item: HomeMenuItem, onClick: () -> Unit) {
     Card(

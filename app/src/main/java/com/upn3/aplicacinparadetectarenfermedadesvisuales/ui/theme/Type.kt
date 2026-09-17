@@ -12,6 +12,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.R
 
+// [Principio S - SRP] Unica responsabilidad de este archivo: declarar las familias tipograficas y
+// la escala de Typography del design system. No dibuja nada ni decide donde se usa cada estilo.
+//
 // Fuentes variables (un solo archivo por familia, distintos pesos via el eje "wght"), tal como
 // las provee Google Fonts. Funcionan en cualquier minSdk: por debajo de API 26 el sistema
 // simplemente renderiza la instancia por defecto en vez de interpolar el eje de variacion.

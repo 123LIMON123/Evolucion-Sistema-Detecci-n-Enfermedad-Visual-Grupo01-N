@@ -19,6 +19,10 @@ import androidx.navigation.NavController
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.UserSessionRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: mostrar la pantalla de registro y marcar la sesion
+ * como iniciada. No valida credenciales reales (no hay backend de auth en esta app).
+ */
 @Composable
 fun RegisterScreen(navController: NavController, userSession: UserSessionRepository) {
     val strings = LocalAppStrings.current
