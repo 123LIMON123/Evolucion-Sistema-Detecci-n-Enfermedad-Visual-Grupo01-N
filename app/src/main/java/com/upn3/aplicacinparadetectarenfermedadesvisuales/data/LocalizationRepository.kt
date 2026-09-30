@@ -6,19 +6,34 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Unica razón para cambiar: como se guarda/expone el idioma preferido de la UI. No sabe nada de
- * los textos en si (eso vive en el catálogo de strings), solo de cual está activo.
+ * [Principio D - DIP] Abstraccion de la que dependen todas las pantallas (via `AppTopBar`).
+ * Ninguna conoce [InMemoryLocalizationRepository]; si mañana el idioma se guarda en
+ * SharedPreferences para recordarlo entre sesiones, se escribe una implementacion nueva y solo
+ * se cambia una linea en `AppContainer`.
  */
-class LocalizationRepository(initialLanguage: AppLanguage = AppLanguage.ES) {
+interface LocalizationRepository {
+    val language: StateFlow<AppLanguage>
+    fun setLanguage(language: AppLanguage)
+    fun toggle()
+}
+
+/**
+ * [Principio S - SRP] Unica razón para cambiar: como se guarda/expone el idioma preferido de la
+ * UI. No sabe nada de los textos en si (eso vive en el catálogo de strings), solo de cual está
+ * activo.
+ *
+ * Implementacion de detalle (bajo nivel): guarda el idioma en memoria mientras el proceso vive.
+ */
+class InMemoryLocalizationRepository(initialLanguage: AppLanguage = AppLanguage.ES) : LocalizationRepository {
 
     private val _language = MutableStateFlow(initialLanguage)
-    val language: StateFlow<AppLanguage> = _language.asStateFlow()
+    override val language: StateFlow<AppLanguage> = _language.asStateFlow()
 
-    fun setLanguage(language: AppLanguage) {
+    override fun setLanguage(language: AppLanguage) {
         _language.value = language
     }
 
-    fun toggle() {
+    override fun toggle() {
         _language.value = if (_language.value == AppLanguage.ES) AppLanguage.EN else AppLanguage.ES
     }
 }

@@ -12,6 +12,12 @@ import java.nio.ByteOrder
  * (ej. [-128, 127] para un modelo cuantizado int8) se soporta escribiendo una clase nueva, sin
  * tocar [ImagePreprocessor] ni las estrategias existentes.
  */
+data class ImagePreprocessingSpec(
+    val targetWidth: Int,
+    val targetHeight: Int,
+    val normalization: PixelNormalizationStrategy
+)
+
 fun interface PixelNormalizationStrategy {
     fun normalize(r: Int, g: Int, b: Int): Triple<Float, Float, Float>
 }
@@ -35,11 +41,7 @@ object MinusOneToOneNormalization : PixelNormalizationStrategy {
     )
 }
 
-data class ImagePreprocessingSpec(
-    val targetWidth: Int,
-    val targetHeight: Int,
-    val normalization: PixelNormalizationStrategy
-)
+
 
 /**
  * [Principio S - SRP] Unica razon para cambiar: el formato/hardware de entrada (tamano de imagen,

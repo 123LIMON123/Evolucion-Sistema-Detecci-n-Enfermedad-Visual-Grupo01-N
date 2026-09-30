@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.di.AppContainer
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.di.AuthViewModelFactory
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.di.CameraAnalysisViewModelFactory
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.RiskLevel
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.AnalysisResultScreen
@@ -16,6 +17,7 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.HomeScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.LoginScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.ProfileScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.RegisterScreen
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.AuthViewModel
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAnalysisViewModel
 
 /**
@@ -27,10 +29,13 @@ fun AppNavHost(navController: NavHostController, appContainer: AppContainer) {
     val cameraAnalysisViewModel: CameraAnalysisViewModel = viewModel(
         factory = CameraAnalysisViewModelFactory(appContainer)
     )
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(appContainer)
+    )
 
     NavHost(navController = navController, startDestination = "login") {
-        composable("login") { LoginScreen(navController, appContainer.userSessionRepository) }
-        composable("register") { RegisterScreen(navController, appContainer.userSessionRepository) }
+        composable("login") { LoginScreen(navController, authViewModel) }
+        composable("register") { RegisterScreen(navController, authViewModel) }
         composable("home") { HomeScreen(navController, appContainer.localizationRepository) }
         composable("camera") {
             CameraScreen(
