@@ -6,7 +6,6 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthFailureReason
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthResult
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.UserSessionRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,7 +38,10 @@ class AuthViewModel(
 
     fun login(email: String, password: String, onSuccess: () -> Unit) {
         _uiState.value = AuthUiState.Loading
-        viewModelScope.launch(Dispatchers.Default) {
+        // Sin Dispatchers.Default a proposito: InMemoryAuthRepository solo lee un mapa en
+        // memoria (no hay IO real), y onSuccess() navega, lo cual debe correr en el hilo
+        // principal. viewModelScope ya usa Dispatchers.Main.immediate por defecto.
+        viewModelScope.launch {
             when (val result = authRepository.login(email, password)) {
                 is AuthResult.Success -> {
                     userSessionRepository.login(result.profile)
@@ -59,7 +61,7 @@ class AuthViewModel(
             return
         }
         _uiState.value = AuthUiState.Loading
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch {
             when (val result = authRepository.register(name, email, password)) {
                 is AuthResult.Success -> {
                     userSessionRepository.login(result.profile)
