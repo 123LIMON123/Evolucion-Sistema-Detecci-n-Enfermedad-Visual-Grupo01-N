@@ -55,9 +55,29 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var validationError by remember { mutableStateOf<String?>(null) }
 
     val isLoading = uiState is AuthUiState.Loading
-    val errorMessage = (uiState as? AuthUiState.Error)?.let { errorMessageFor(it.reason, strings) }
+    val errorMessage = validationError
+        ?: (uiState as? AuthUiState.Error)?.let { errorMessageFor(it.reason, strings) }
+
+    fun attemptRegister() {
+        validationError = when {
+            name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank() ->
+                strings.errorRequiredFields
+            !isValidEmailFormat(email) -> strings.errorInvalidEmailFormat
+            password.length < 4 -> strings.errorPasswordTooShort
+            password != confirmPassword -> strings.errorPasswordMismatch
+            else -> null
+        }
+        if (validationError == null) {
+            viewModel.register(name, email, password, confirmPassword) {
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -82,7 +102,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
 
         OutlinedTextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = { name = it; validationError = null },
             label = { Text(strings.nameLabel) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(0.9f),
@@ -91,7 +111,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = { email = it; validationError = null },
             label = { Text(strings.emailLabel) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(0.9f),
@@ -100,7 +120,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = { password = it; validationError = null },
             label = { Text(strings.passwordLabel) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
@@ -110,7 +130,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedTextField(
             value = confirmPassword,
-            onValueChange = { confirmPassword = it },
+            onValueChange = { confirmPassword = it; validationError = null },
             label = { Text(strings.confirmPasswordLabel) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
@@ -130,13 +150,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
 
         Spacer(modifier = Modifier.height(24.dp))
         Button(
-            onClick = {
-                viewModel.register(name, email, password, confirmPassword) {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                }
-            },
+            onClick = { attemptRegister() },
             enabled = !isLoading,
             modifier = Modifier.fillMaxWidth(0.8f),
             shape = MaterialTheme.shapes.medium

@@ -62,9 +62,26 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var validationError by remember { mutableStateOf<String?>(null) }
 
     val isLoading = uiState is AuthUiState.Loading
-    val errorMessage = (uiState as? AuthUiState.Error)?.let { errorMessageFor(it.reason, strings) }
+    val errorMessage = validationError
+        ?: (uiState as? AuthUiState.Error)?.let { errorMessageFor(it.reason, strings) }
+
+    fun attemptLogin() {
+        validationError = when {
+            email.isBlank() || password.isBlank() -> strings.errorRequiredFields
+            !isValidEmailFormat(email) -> strings.errorInvalidEmailFormat
+            else -> null
+        }
+        if (validationError == null) {
+            viewModel.login(email, password) {
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -120,7 +137,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = { email = it; validationError = null },
                 label = { Text(strings.emailLabel) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(0.9f),
@@ -130,7 +147,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { password = it; validationError = null },
                 label = { Text(strings.passwordLabel) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
@@ -151,9 +168,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
 
             Spacer(modifier = Modifier.height(24.dp))
             Button(
-                onClick = {
-                    viewModel.login(email, password) { navController.navigate("home") }
-                },
+                onClick = { attemptLogin() },
                 enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth(0.8f),
                 shape = MaterialTheme.shapes.medium,
