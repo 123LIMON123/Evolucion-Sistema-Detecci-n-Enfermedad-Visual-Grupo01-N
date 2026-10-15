@@ -99,6 +99,17 @@ def main():
         class_weights[i] = float(neg / max(pos, 1)) if pos > 0 else 1.0
     log(f"Pesos por clase (para referencia): {dict(zip(LABEL_COLS, [round(class_weights[i], 2) for i in range(8)]))}")
 
+    # Aumentacion mas fuerte que antes (flip+brillo+contraste): se le suma rotacion, zoom y
+    # saturacion para que el modelo generalice mejor con pocas imagenes por clase minoritaria
+    # (H, A, M, G, C). Se aplica por batch (capas de Keras), no por imagen individual.
+    augmenter = tf.keras.Sequential([
+        tf.keras.layers.RandomFlip("horizontal"),
+        tf.keras.layers.RandomRotation(0.05),
+        tf.keras.layers.RandomZoom(0.1),
+        tf.keras.layers.RandomContrast(0.15),
+        tf.keras.layers.RandomBrightness(0.15),
+    ])
+
     def make_dataset(indices, training):
         x = images[indices]
         y = labels[indices]
@@ -106,16 +117,13 @@ def main():
         if training:
             ds = ds.shuffle(2000, seed=SEED)
 
-        def augment(img, lbl):
-            img = tf.image.random_flip_left_right(img)
-            img = tf.image.random_brightness(img, 0.1)
-            img = tf.image.random_contrast(img, 0.9, 1.1)
-            return img, lbl
-
+        ds = ds.batch(BATCH_SIZE)
         if training:
-            ds = ds.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
-
-        return ds.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
+            ds = ds.map(
+                lambda img, lbl: (augmenter(img, training=True), lbl),
+                num_parallel_calls=tf.data.AUTOTUNE,
+            )
+        return ds.prefetch(tf.data.AUTOTUNE)
 
     train_ds = make_dataset(train_idx, training=True)
     val_ds = make_dataset(val_idx, training=False)
@@ -134,17 +142,35 @@ def main():
         per_class = -(y_true * tf.math.log(y_pred) * weight_vec + (1 - y_true) * tf.math.log(1 - y_pred))
         return tf.reduce_mean(per_class)
 
+    # EarlyStopping corta cada fase si deja de mejorar (ahorra tiempo), pero su
+    # restore_best_weights solo compara dentro de la fase actual. Para quedarnos con el mejor
+    # peso de TODO el entrenamiento (Fase 1 + Fase 2), se usa ademas un ModelCheckpoint que
+    # escribe a un unico archivo y se reutiliza en las dos fases, asi sigue comparando contra el
+    # mejor val_auc visto desde el principio.
+    checkpoint_path = os.path.join(OUT_DIR, "best_weights.weights.h5")
+    checkpoint = tf.keras.callbacks.ModelCheckpoint(
+        checkpoint_path, monitor="val_auc", mode="max", save_best_only=True, save_weights_only=True
+    )
+
+    def early_stopping(patience):
+        return tf.keras.callbacks.EarlyStopping(monitor="val_auc", mode="max", patience=patience)
+
     log("=== Fase 1: entrenando solo la cabeza (backbone congelado) ===")
     model.compile(
         optimizer=tf.keras.optimizers.Adam(1e-3),
         loss=weighted_bce,
         metrics=[tf.keras.metrics.AUC(name="auc", multi_label=True)],
     )
-    model.fit(train_ds, validation_data=val_ds, epochs=6)
+    model.fit(
+        train_ds, validation_data=val_ds, epochs=15,
+        callbacks=[early_stopping(patience=4), checkpoint],
+    )
 
     log("=== Fase 2: fine-tuning del backbone (lr bajo) ===")
     base.trainable = True
-    for layer in base.layers[:-30]:
+    # Antes se descongelaban solo las ultimas 30 capas; con mas datos de aumentacion y mas
+    # epocas hay margen para dejar mas capas del backbone adaptarse (ultimas 60).
+    for layer in base.layers[:-60]:
         layer.trainable = False
 
     model.compile(
@@ -152,7 +178,13 @@ def main():
         loss=weighted_bce,
         metrics=[tf.keras.metrics.AUC(name="auc", multi_label=True)],
     )
-    model.fit(train_ds, validation_data=val_ds, epochs=6)
+    model.fit(
+        train_ds, validation_data=val_ds, epochs=20,
+        callbacks=[early_stopping(patience=5), checkpoint],
+    )
+
+    log(f"Restaurando el mejor peso visto en todo el entrenamiento ({checkpoint_path})...")
+    model.load_weights(checkpoint_path)
 
     log("Evaluando en validacion...")
     results = model.evaluate(val_ds)
