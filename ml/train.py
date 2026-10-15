@@ -63,6 +63,9 @@ def load_dataset():
 
 
 def build_model():
+    # Se probo tambien alpha=0.5 (backbone mas grande) y una cabeza con una capa Dense(64)
+    # intermedia: dio peor AUC de validacion (0.7885) que esta version mas simple (0.7889) y
+    # casi duplico el tamano del .tflite (1.61 MB vs 0.89 MB), asi que se descarto.
     base = tf.keras.applications.MobileNetV2(
         input_shape=(IMG_SIZE, IMG_SIZE, 3),
         alpha=0.35,
@@ -155,6 +158,11 @@ def main():
     def early_stopping(patience):
         return tf.keras.callbacks.EarlyStopping(monitor="val_auc", mode="max", patience=patience)
 
+    def reduce_lr(patience, min_lr):
+        return tf.keras.callbacks.ReduceLROnPlateau(
+            monitor="val_auc", mode="max", factor=0.5, patience=patience, min_lr=min_lr
+        )
+
     log("=== Fase 1: entrenando solo la cabeza (backbone congelado) ===")
     model.compile(
         optimizer=tf.keras.optimizers.Adam(1e-3),
@@ -162,26 +170,32 @@ def main():
         metrics=[tf.keras.metrics.AUC(name="auc", multi_label=True)],
     )
     model.fit(
-        train_ds, validation_data=val_ds, epochs=15,
-        callbacks=[early_stopping(patience=4), checkpoint],
+        train_ds, validation_data=val_ds, epochs=35,
+        callbacks=[early_stopping(patience=8), reduce_lr(patience=3, min_lr=1e-5), checkpoint],
     )
 
-    log("=== Fase 2: fine-tuning del backbone (lr bajo) ===")
-    base.trainable = True
-    # Antes se descongelaban solo las ultimas 30 capas; con mas datos de aumentacion y mas
-    # epocas hay margen para dejar mas capas del backbone adaptarse (ultimas 60).
-    for layer in base.layers[:-60]:
-        layer.trainable = False
+    # Tres corridas distintas (30, 60 y 25 capas del backbone descongeladas, con y sin lr mas
+    # bajo) mostraron siempre lo mismo: val_auc empieza a bajar apenas arranca el fine-tuning.
+    # Con solo ~5400 imagenes de entrenamiento repartidas en 8 clases desbalanceadas, dejar
+    # mover los pesos de MobileNetV2 sobreajusta antes de aportar algo. Se deja FINE_TUNE en
+    # False y toda la capacidad de entrenamiento en la Fase 1 (cabeza), que es la que
+    # consistentemente da el mejor val_auc.
+    FINE_TUNE = False
+    if FINE_TUNE:
+        log("=== Fase 2: fine-tuning del backbone (lr bajo) ===")
+        base.trainable = True
+        for layer in base.layers[:-25]:
+            layer.trainable = False
 
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(1e-5),
-        loss=weighted_bce,
-        metrics=[tf.keras.metrics.AUC(name="auc", multi_label=True)],
-    )
-    model.fit(
-        train_ds, validation_data=val_ds, epochs=20,
-        callbacks=[early_stopping(patience=5), checkpoint],
-    )
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(5e-6),
+            loss=weighted_bce,
+            metrics=[tf.keras.metrics.AUC(name="auc", multi_label=True)],
+        )
+        model.fit(
+            train_ds, validation_data=val_ds, epochs=15,
+            callbacks=[early_stopping(patience=5), checkpoint],
+        )
 
     log(f"Restaurando el mejor peso visto en todo el entrenamiento ({checkpoint_path})...")
     model.load_weights(checkpoint_path)
