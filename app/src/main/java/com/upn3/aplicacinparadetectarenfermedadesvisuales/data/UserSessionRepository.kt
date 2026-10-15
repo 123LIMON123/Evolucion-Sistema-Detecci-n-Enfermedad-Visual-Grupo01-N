@@ -11,11 +11,17 @@ data class UserProfile(
 
 /**
  * [Principio D - DIP] Abstraccion de la que dependen las pantallas (Login, Register, Profile) y
- * `AuthViewModel`. Ninguna de ellas instancia [InMemoryUserSessionRepository] directamente ni
- * sabe que la sesion vive en memoria; si mañana se guarda en DataStore para sobrevivir un reinicio
- * de la app, se escribe una implementacion nueva y solo se cambia una linea en `AppContainer`.
+ * `AuthViewModel`. Ninguna de ellas sabe si la sesion vive solo en memoria ([InMemoryUserSessionRepository])
+ * o persistida en disco (`DataStoreUserSessionRepository`): ese cambio se hizo en un solo lugar
+ * (`AppContainer`) sin tocar ninguna pantalla ni el ViewModel.
  */
 interface UserSessionRepository {
+    /**
+     * `true` cuando ya se termino de leer el estado de sesion persistido (o inmediatamente, para
+     * una implementacion que no persiste nada). Mientras sea `false`, [isLoggedIn] todavia no es
+     * confiable: la pantalla de arranque debe esperar antes de decidir si mostrar Login o Home.
+     */
+    val isReady: StateFlow<Boolean>
     val isLoggedIn: StateFlow<Boolean>
     val currentUser: StateFlow<UserProfile>
     fun login(profile: UserProfile)
@@ -31,6 +37,9 @@ interface UserSessionRepository {
  */
 class InMemoryUserSessionRepository : UserSessionRepository {
 
+    // No hay nada que leer de disco: esta listo apenas se crea.
+    override val isReady: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+
     private val _isLoggedIn = MutableStateFlow(false)
     override val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
@@ -44,5 +53,6 @@ class InMemoryUserSessionRepository : UserSessionRepository {
 
     override fun logout() {
         _isLoggedIn.value = false
+        _currentUser.value = UserProfile(name = "", email = "")
     }
 }

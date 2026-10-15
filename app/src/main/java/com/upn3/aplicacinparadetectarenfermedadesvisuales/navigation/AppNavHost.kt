@@ -1,6 +1,14 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -26,14 +34,26 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAna
  */
 @Composable
 fun AppNavHost(navController: NavHostController, appContainer: AppContainer) {
+    // La sesion puede venir persistida en disco (DataStoreUserSessionRepository): hasta que se
+    // termine de leer, no sabemos si arrancar en "login" o en "home". Mostrar un loader breve
+    // acá es mejor que arrancar siempre en Login y pegar un salto a Home apenas carga.
+    val isSessionReady by appContainer.userSessionRepository.isReady.collectAsState()
+    if (!isSessionReady) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+        return
+    }
+
     val cameraAnalysisViewModel: CameraAnalysisViewModel = viewModel(
         factory = CameraAnalysisViewModelFactory(appContainer)
     )
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(appContainer)
     )
+    val startDestination = if (appContainer.userSessionRepository.isLoggedIn.value) "home" else "login"
 
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(navController = navController, startDestination = startDestination) {
         composable("login") { LoginScreen(navController, authViewModel) }
         composable("register") { RegisterScreen(navController, authViewModel) }
         composable("home") { HomeScreen(navController, appContainer.localizationRepository) }

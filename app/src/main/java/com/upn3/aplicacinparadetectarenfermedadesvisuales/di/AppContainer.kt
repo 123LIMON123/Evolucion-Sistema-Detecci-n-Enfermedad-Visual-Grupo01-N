@@ -5,10 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.DataStoreUserSessionRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryAnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryAuthRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryLocalizationRepository
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryUserSessionRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.UserSessionRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.MedicalDiagnosticInterpreter
@@ -20,6 +20,15 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.TFLiteDiseaseClassi
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.camera.FrameQualityAnalyzer
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.AuthViewModel
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAnalysisViewModel
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+
+// El unico lugar que liga el DataStore de sesion a un Context de Android. El repositorio en si
+// (DataStoreUserSessionRepository) recibe el DataStore ya construido, no el Context, para poder
+// probarse con un DataStore de archivo temporal sin depender de Android.
+private val Context.sessionDataStore by preferencesDataStore(name = "user_session")
 
 /**
  * [Principio S - SRP] Unica responsabilidad: cablear (instanciar y conectar) las implementaciones
@@ -33,6 +42,11 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAna
  * implementacion de bajo nivel es cambiar una linea aca, nunca en el codigo que la usa.
  */
 class AppContainer(context: Context) {
+
+    // Alcance de corrutinas de toda la app, para repositorios que escriben a disco en segundo
+    // plano (ej. DataStore). Vive tanto como el proceso, igual que este AppContainer (ambos los
+    // crea EyeDiseaseApp una unica vez).
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     // El modelo se entreno con MobileNetV2 a 160x160 y estas 8 clases, en este orden exacto
     // (ver ml/train.py, LABEL_COLS). Este orden es un detalle de la estructura de tensores del
@@ -65,7 +79,13 @@ class AppContainer(context: Context) {
 
     val historyRepository: AnalysisHistoryRepository = InMemoryAnalysisHistoryRepository()
 
-    val userSessionRepository: UserSessionRepository = InMemoryUserSessionRepository()
+    // [Principio D - DIP] DataStoreUserSessionRepository reemplazo a InMemoryUserSessionRepository
+    // en este unico lugar para que la sesion sobreviva a cerrar la app; ninguna pantalla ni el
+    // AuthViewModel se enteraron del cambio porque dependen de la interfaz UserSessionRepository.
+    val userSessionRepository: UserSessionRepository = DataStoreUserSessionRepository(
+        dataStore = context.applicationContext.sessionDataStore,
+        externalScope = appScope
+    )
 
     val authRepository: AuthRepository = InMemoryAuthRepository()
 
