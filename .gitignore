@@ -16,6 +16,7 @@ local.properties
 
 # Dataset y artefactos de entrenamiento del modelo (pesan varios GB, no van al repo)
 /ml/data/
+/ml/external_raw/
 /ml/__pycache__/
 /ml/*.weights.h5
 *.pyc

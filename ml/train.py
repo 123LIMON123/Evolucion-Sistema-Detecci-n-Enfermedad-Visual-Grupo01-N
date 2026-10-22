@@ -24,6 +24,20 @@ from sklearn.utils.class_weight import compute_class_weight
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 IMAGES_DIR = os.path.join(DATA_DIR, "preprocessed_images")
 CSV_PATH = os.path.join(DATA_DIR, "full_df.csv")
+# Imagenes de miopia patologica sumadas desde otros dos datasets publicos (JSIEC-1000 y
+# RFMiD 2.0, ver ml/EXTERNAL_DATASETS.md) para reforzar la clase M, que en ODIR-5K es minoritaria
+# (306 de 6392 filas). Es un CSV aparte en vez de mezclarse en full_df.csv para que quede claro
+# cuales filas vienen del dataset original y cuales son el agregado.
+#
+# INCLUDE_EXTERNAL_MYOPIA en False por defecto: en dos corridas comparables, sumar estas 97
+# imagenes NO mejoro el AUC de la clase M (0.9765 sin ellas vs. 0.9694 y 0.9729 con ellas) ni el
+# promedio general. M ya rendia cerca del techo en ODIR-5K solo; las imagenes externas, de otras
+# camaras/poblaciones, metieron algo de corrimiento de dominio sin aportar señal nueva. Se deja el
+# flag (mismo patron que FINE_TUNE mas abajo) para no borrar el trabajo de integracion ni esconder
+# el hallazgo, por si un dataset futuro con las clases realmente debiles (N, D, O; ver
+# ml/EXTERNAL_DATASETS.md) sigue el mismo mecanismo.
+INCLUDE_EXTERNAL_MYOPIA = False
+EXTERNAL_MYOPIA_CSV = os.path.join(DATA_DIR, "external_myopia.csv")
 OUT_DIR = os.path.dirname(__file__)
 
 LABEL_COLS = ["N", "D", "G", "C", "A", "H", "M", "O"]
@@ -42,7 +56,17 @@ def log(msg):
 
 def load_dataset():
     log("Leyendo CSV de etiquetas...")
-    df = pd.read_csv(CSV_PATH)
+    df = pd.read_csv(CSV_PATH)[["filename"] + LABEL_COLS]
+
+    if INCLUDE_EXTERNAL_MYOPIA and os.path.exists(EXTERNAL_MYOPIA_CSV):
+        external_df = pd.read_csv(EXTERNAL_MYOPIA_CSV)[["filename"] + LABEL_COLS]
+        log(f"Sumando {len(external_df)} imagenes externas de miopia patologica (JSIEC-1000 + RFMiD 2.0)")
+        # Limitacion conocida: de estas imagenes solo se confirmo la etiqueta de miopia desde su
+        # dataset de origen (M=1); las otras 7 columnas quedan en 0 aunque el ojo pueda tener
+        # ademas otra condicion no reportada por esa fuente. Es ruido de etiqueta aceptado a
+        # cambio de mas datos para la clase minoritaria M; ver ml/EXTERNAL_DATASETS.md.
+        df = pd.concat([df, external_df], ignore_index=True)
+
     df = df[df["filename"].apply(lambda f: os.path.exists(os.path.join(IMAGES_DIR, f)))]
     log(f"{len(df)} imagenes con archivo presente en preprocessed_images/")
 
