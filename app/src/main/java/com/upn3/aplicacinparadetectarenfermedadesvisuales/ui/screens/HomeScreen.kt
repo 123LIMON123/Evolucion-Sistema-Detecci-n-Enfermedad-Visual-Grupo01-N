@@ -28,13 +28,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
@@ -54,8 +58,13 @@ private data class HomeMenuItem(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, localizationRepository: LocalizationRepository) {
+fun HomeScreen(
+    navController: NavController,
+    localizationRepository: LocalizationRepository,
+    historyRepository: AnalysisHistoryRepository
+) {
     val strings = LocalAppStrings.current
+    val history by historyRepository.history.collectAsState()
 
     Scaffold(
         topBar = {
@@ -73,14 +82,16 @@ fun HomeScreen(navController: NavController, localizationRepository: Localizatio
                 .padding(innerPadding)
                 .padding(20.dp)
         ) {
-            Text(text = strings.homeWelcome, style = MaterialTheme.typography.headlineSmall)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = strings.homeSubtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            HomeHeroCard(
+                welcome = strings.homeWelcome,
+                subtitle = strings.homeSubtitle,
+                analysesLabel = if (history.isEmpty()) {
+                    strings.noHistoryYet
+                } else {
+                    strings.homeAnalysesCountLabel.format(history.size)
+                }
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             val items = listOf(
                 HomeMenuItem(
@@ -129,6 +140,61 @@ fun HomeScreen(navController: NavController, localizationRepository: Localizatio
     }
 }
 
+/**
+ * [Principio S - SRP] Unica responsabilidad: dibujar el encabezado de bienvenida de Home, con un
+ * dato real (cuantos analisis lleva guardados el usuario) en vez de solo texto decorativo, para
+ * que la pantalla de entrada se sienta viva y no un simple menu vacio.
+ */
+@Composable
+private fun HomeHeroCard(welcome: String, subtitle: String, analysesLabel: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.extraLarge)
+            .background(
+                Brush.linearGradient(
+                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
+                )
+            )
+            .padding(20.dp)
+    ) {
+        Column {
+            Text(
+                text = welcome,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f))
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.DateRange,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.padding(start = 6.dp))
+                Text(
+                    text = analysesLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
+    }
+}
+
 /** [Principio S - SRP] Unica responsabilidad: dibujar una tarjeta de menu del Home. */
 @Composable
 private fun HomeMenuCard(item: HomeMenuItem, onClick: () -> Unit) {
@@ -138,7 +204,7 @@ private fun HomeMenuCard(item: HomeMenuItem, onClick: () -> Unit) {
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

@@ -71,7 +71,9 @@ fun AppNavHost(navController: NavHostController, appContainer: AppContainer) {
         }
         composable("login") { LoginScreen(navController, authViewModel) }
         composable("register") { RegisterScreen(navController, authViewModel) }
-        composable("home") { HomeScreen(navController, appContainer.localizationRepository) }
+        composable("home") {
+            HomeScreen(navController, appContainer.localizationRepository, appContainer.historyRepository)
+        }
         composable("camera") {
             CameraScreen(
                 navController,
