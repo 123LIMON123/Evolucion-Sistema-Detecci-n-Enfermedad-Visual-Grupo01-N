@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.DataStoreOnboardingRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.DataStoreUserSessionRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryAnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryAuthRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryLocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.OnboardingRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.UserSessionRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.MedicalDiagnosticInterpreter
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.EyeDiseaseClassifier
@@ -29,6 +31,11 @@ import kotlinx.coroutines.SupervisorJob
 // (DataStoreUserSessionRepository) recibe el DataStore ya construido, no el Context, para poder
 // probarse con un DataStore de archivo temporal sin depender de Android.
 private val Context.sessionDataStore by preferencesDataStore(name = "user_session")
+
+// DataStore separado para el estado del onboarding: Jetpack DataStore trata cada nombre de
+// archivo de preferencias como un singleton por Context, asi que una preferencia nueva que no
+// tiene nada que ver con la sesion va en su propio archivo en vez de reutilizar sessionDataStore.
+private val Context.onboardingDataStore by preferencesDataStore(name = "onboarding")
 
 /**
  * [Principio S - SRP] Unica responsabilidad: cablear (instanciar y conectar) las implementaciones
@@ -90,6 +97,11 @@ class AppContainer(context: Context) {
     val authRepository: AuthRepository = InMemoryAuthRepository()
 
     val localizationRepository: LocalizationRepository = InMemoryLocalizationRepository()
+
+    val onboardingRepository: OnboardingRepository = DataStoreOnboardingRepository(
+        dataStore = context.applicationContext.onboardingDataStore,
+        externalScope = appScope
+    )
 }
 
 /**

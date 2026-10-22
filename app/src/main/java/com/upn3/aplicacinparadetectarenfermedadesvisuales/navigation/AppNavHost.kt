@@ -23,6 +23,7 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.DiseaseInfo
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.HistoryScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.HomeScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.LoginScreen
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.OnboardingScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.ProfileScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.RegisterScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.SettingsScreen
@@ -35,11 +36,12 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAna
  */
 @Composable
 fun AppNavHost(navController: NavHostController, appContainer: AppContainer) {
-    // La sesion puede venir persistida en disco (DataStoreUserSessionRepository): hasta que se
-    // termine de leer, no sabemos si arrancar en "login" o en "home". Mostrar un loader breve
-    // acá es mejor que arrancar siempre en Login y pegar un salto a Home apenas carga.
+    // La sesion y el onboarding pueden venir persistidos en disco: hasta que ambos terminen de
+    // leerse no sabemos si arrancar en "onboarding", "login" o "home". Mostrar un loader breve
+    // acá es mejor que arrancar siempre en una pantalla y pegar un salto a otra apenas carga.
     val isSessionReady by appContainer.userSessionRepository.isReady.collectAsState()
-    if (!isSessionReady) {
+    val isOnboardingReady by appContainer.onboardingRepository.isReady.collectAsState()
+    if (!isSessionReady || !isOnboardingReady) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
@@ -52,9 +54,21 @@ fun AppNavHost(navController: NavHostController, appContainer: AppContainer) {
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(appContainer)
     )
-    val startDestination = if (appContainer.userSessionRepository.isLoggedIn.value) "home" else "login"
+    val startDestination = when {
+        !appContainer.onboardingRepository.hasCompletedOnboarding.value -> "onboarding"
+        appContainer.userSessionRepository.isLoggedIn.value -> "home"
+        else -> "login"
+    }
 
     NavHost(navController = navController, startDestination = startDestination) {
+        composable("onboarding") {
+            OnboardingScreen(onFinish = {
+                appContainer.onboardingRepository.markCompleted()
+                navController.navigate("login") {
+                    popUpTo("onboarding") { inclusive = true }
+                }
+            })
+        }
         composable("login") { LoginScreen(navController, authViewModel) }
         composable("register") { RegisterScreen(navController, authViewModel) }
         composable("home") { HomeScreen(navController, appContainer.localizationRepository) }
