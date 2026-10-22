@@ -23,7 +23,13 @@ object DiseaseCatalog {
     data class DiseaseInfo(
         val code: String,
         val es: LocalizedDiseaseInfo,
-        val en: LocalizedDiseaseInfo
+        val en: LocalizedDiseaseInfo,
+        // La mayoria de estas entradas corresponden a una de las 8 salidas del modelo (mismo
+        // `code` que usa TFLiteDiseaseClassifier). El astigmatismo es la excepcion: es un error
+        // refractivo (forma de la cornea), no una condicion visible en una foto de fondo de ojo
+        // como si lo son las otras siete, asi que no tiene sentido clinico que un modelo entrenado
+        // con fotos intente "detectarlo". Se deja como contenido puramente informativo.
+        val isDetectableByModel: Boolean = true
     ) {
         fun localized(language: AppLanguage): LocalizedDiseaseInfo = when (language) {
             AppLanguage.ES -> es
@@ -150,6 +156,27 @@ object DiseaseCatalog {
                 description = "Other eye abnormalities not classified in the categories above.",
                 symptoms = listOf("Variable depending on the abnormality detected"),
                 recommendation = "Consult an ophthalmologist for a detailed evaluation."
+            )
+        ),
+        DiseaseInfo(
+            code = "AST",
+            isDetectableByModel = false,
+            es = LocalizedDiseaseInfo(
+                name = "Astigmatismo",
+                description = "Error refractivo causado por una curvatura irregular de la cornea o el cristalino. " +
+                    "A diferencia de las demas condiciones de este catalogo, no produce cambios visibles en el " +
+                    "fondo de ojo, por lo que esta app no puede detectarlo a partir de una foto: se incluye aqui " +
+                    "solo como informacion de referencia.",
+                symptoms = listOf("Vision borrosa o distorsionada a cualquier distancia", "Fatiga visual", "Dolores de cabeza", "Entrecerrar los ojos con frecuencia"),
+                recommendation = "Se diagnostica con un examen de refraccion (no con una foto); consulte a un optometrista u oftalmologo."
+            ),
+            en = LocalizedDiseaseInfo(
+                name = "Astigmatism",
+                description = "A refractive error caused by an irregularly shaped cornea or lens. Unlike the other " +
+                    "conditions in this catalog, it causes no visible changes in the fundus, so this app cannot " +
+                    "detect it from a photo: it is included here for reference only.",
+                symptoms = listOf("Blurred or distorted vision at any distance", "Eye strain", "Headaches", "Frequent squinting"),
+                recommendation = "Diagnosed with a refraction exam, not a photo; consult an optometrist or ophthalmologist."
             )
         )
     )

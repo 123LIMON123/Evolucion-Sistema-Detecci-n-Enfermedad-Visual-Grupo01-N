@@ -25,6 +25,8 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.DiseaseCatalog
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.ClinicalStatusChip
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.ClinicalTier
 
 /**
  * [Principio S - SRP] Unica responsabilidad: listar el catalogo de enfermedades ([DiseaseCatalog])
@@ -61,6 +63,10 @@ fun DiseaseInfoScreen(navController: NavController, localizationRepository: Loca
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = info.name, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+                        if (!disease.isDetectableByModel) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ClinicalStatusChip(tier = ClinicalTier.NEUTRAL, label = strings.notDetectableByAppBadge)
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = info.description, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(8.dp))

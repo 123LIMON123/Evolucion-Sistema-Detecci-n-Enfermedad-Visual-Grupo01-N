@@ -76,6 +76,7 @@ data class AppStrings(
     val diseaseInfoTitle: String,
     val commonSymptoms: String,
     val recommendationLabel: String,
+    val notDetectableByAppBadge: String,
     // history
     val historyTitle: String,
     val noHistoryYet: String,
@@ -145,6 +146,7 @@ val EsStrings = AppStrings(
     diseaseInfoTitle = "Información de enfermedades",
     commonSymptoms = "Síntomas comunes",
     recommendationLabel = "Recomendación",
+    notDetectableByAppBadge = "No detectable por esta app",
     historyTitle = "Historial de análisis",
     noHistoryYet = "Aún no tienes análisis guardados.",
     profileTitle = "Mi perfil",
@@ -212,6 +214,7 @@ val EnStrings = AppStrings(
     diseaseInfoTitle = "Disease information",
     commonSymptoms = "Common symptoms",
     recommendationLabel = "Recommendation",
+    notDetectableByAppBadge = "Not detectable by this app",
     historyTitle = "Analysis history",
     noHistoryYet = "You don't have any saved analyses yet.",
     profileTitle = "My profile",

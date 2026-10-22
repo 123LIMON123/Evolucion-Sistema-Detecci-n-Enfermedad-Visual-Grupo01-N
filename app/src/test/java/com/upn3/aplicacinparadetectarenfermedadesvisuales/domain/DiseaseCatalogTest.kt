@@ -54,4 +54,25 @@ class DiseaseCatalogTest {
         val codes = DiseaseCatalog.all.map { it.code }
         assertEquals(codes.size, codes.toSet().size)
     }
+
+    @Test
+    fun `every model-output code is flagged as detectable`() {
+        modelLabelOrder.forEach { code ->
+            assertTrue(
+                "'$code' es una salida real del modelo, no deberia estar marcado isDetectableByModel=false",
+                DiseaseCatalog.byCode(code)!!.isDetectableByModel
+            )
+        }
+    }
+
+    @Test
+    fun `astigmatism is informational only, not a model output`() {
+        val astigmatism = DiseaseCatalog.byCode("AST")
+        assertNotNull("El catalogo deberia incluir astigmatismo como entrada informativa", astigmatism)
+        assertTrue(
+            "Astigmatismo no deberia marcarse como detectable: no es visible en una foto de fondo de ojo",
+            astigmatism!!.isDetectableByModel.not()
+        )
+        assertTrue("'AST' no deberia estar entre las salidas del modelo", "AST" !in modelLabelOrder)
+    }
 }
