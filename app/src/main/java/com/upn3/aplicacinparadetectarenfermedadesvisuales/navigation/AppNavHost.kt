@@ -25,6 +25,7 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.HomeScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.LoginScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.ProfileScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.RegisterScreen
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.SettingsScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.AuthViewModel
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAnalysisViewModel
 
@@ -79,6 +80,9 @@ fun AppNavHost(navController: NavHostController, appContainer: AppContainer) {
         }
         composable("profile") {
             ProfileScreen(navController, appContainer.userSessionRepository, appContainer.localizationRepository)
+        }
+        composable("settings") {
+            SettingsScreen(navController, appContainer.localizationRepository, appContainer.historyRepository)
         }
     }
 }

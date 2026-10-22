@@ -45,6 +45,8 @@ data class AppStrings(
     val diseaseInfoDescription: String,
     val profileNav: String,
     val profileDescription: String,
+    val settingsNav: String,
+    val settingsDescription: String,
     // medical disclaimer
     val disclaimerText: String,
     val disclaimerDismiss: String,
@@ -82,7 +84,30 @@ data class AppStrings(
     val noHistoryYet: String,
     // profile
     val profileTitle: String,
-    val logout: String
+    val logout: String,
+    // settings
+    val settingsTitle: String,
+    val settingsLanguageSection: String,
+    val settingsLanguageCurrentValue: String,
+    val settingsHistorySection: String,
+    val settingsClearHistoryAction: String,
+    val settingsClearHistoryConfirmTitle: String,
+    val settingsClearHistoryConfirmMessage: String,
+    val settingsClearHistoryConfirmButton: String,
+    val settingsClearHistoryCancelButton: String,
+    val settingsAboutSection: String,
+    val settingsAboutVersion: String,
+    val settingsAboutDescription: String,
+    // onboarding
+    val onboardingSkip: String,
+    val onboardingNext: String,
+    val onboardingStart: String,
+    val onboardingTitle1: String,
+    val onboardingBody1: String,
+    val onboardingTitle2: String,
+    val onboardingBody2: String,
+    val onboardingTitle3: String,
+    val onboardingBody3: String
 )
 
 val EsStrings = AppStrings(
@@ -119,6 +144,8 @@ val EsStrings = AppStrings(
     diseaseInfoDescription = "Aprende sobre cada condición ocular",
     profileNav = "Perfil",
     profileDescription = "Tu cuenta y preferencias",
+    settingsNav = "Ajustes",
+    settingsDescription = "Idioma, historial y acerca de la app",
     disclaimerText = "Esta clasificación es una herramienta de apoyo (triage) generada por IA y no sustituye el examen de un optometrista u oftalmólogo con licencia.",
     disclaimerDismiss = "Entendido",
     cameraTitle = "Analizar ojo",
@@ -150,7 +177,28 @@ val EsStrings = AppStrings(
     historyTitle = "Historial de análisis",
     noHistoryYet = "Aún no tienes análisis guardados.",
     profileTitle = "Mi perfil",
-    logout = "Cerrar sesión"
+    logout = "Cerrar sesión",
+    settingsTitle = "Ajustes",
+    settingsLanguageSection = "Idioma",
+    settingsLanguageCurrentValue = "Español",
+    settingsHistorySection = "Historial",
+    settingsClearHistoryAction = "Borrar historial de análisis",
+    settingsClearHistoryConfirmTitle = "¿Borrar historial?",
+    settingsClearHistoryConfirmMessage = "Esta acción elimina todos los análisis guardados en esta sesión y no se puede deshacer.",
+    settingsClearHistoryConfirmButton = "Borrar",
+    settingsClearHistoryCancelButton = "Cancelar",
+    settingsAboutSection = "Acerca de",
+    settingsAboutVersion = "OcuCheck AI · versión 1.0",
+    settingsAboutDescription = "Herramienta de apoyo al cribado de enfermedades oculares. No reemplaza una consulta oftalmológica profesional.",
+    onboardingSkip = "Omitir",
+    onboardingNext = "Siguiente",
+    onboardingStart = "Comenzar",
+    onboardingTitle1 = "Cuida tu visión",
+    onboardingBody1 = "OcuCheck AI analiza una foto de tu ojo, tomada con la cámara del celular, y estima la probabilidad de ocho condiciones oculares comunes.",
+    onboardingTitle2 = "Todo en tu teléfono",
+    onboardingBody2 = "El análisis corre completamente en el dispositivo: tu foto nunca se envía a ningún servidor ni necesita conexión a internet.",
+    onboardingTitle3 = "No es un diagnóstico",
+    onboardingBody3 = "Esta app es una herramienta de apoyo al cribado, no un diagnóstico médico. Ante cualquier duda o síntoma, consulta a un oftalmólogo."
 )
 
 val EnStrings = AppStrings(
@@ -187,6 +235,8 @@ val EnStrings = AppStrings(
     diseaseInfoDescription = "Learn about each eye condition",
     profileNav = "Profile",
     profileDescription = "Your account and preferences",
+    settingsNav = "Settings",
+    settingsDescription = "Language, history and about the app",
     disclaimerText = "This classification is an AI-assisted triage tool and does not replace an exam by a licensed optometrist or ophthalmologist.",
     disclaimerDismiss = "Got it",
     cameraTitle = "Analyze eye",
@@ -218,7 +268,28 @@ val EnStrings = AppStrings(
     historyTitle = "Analysis history",
     noHistoryYet = "You don't have any saved analyses yet.",
     profileTitle = "My profile",
-    logout = "Log out"
+    logout = "Log out",
+    settingsTitle = "Settings",
+    settingsLanguageSection = "Language",
+    settingsLanguageCurrentValue = "English",
+    settingsHistorySection = "History",
+    settingsClearHistoryAction = "Clear analysis history",
+    settingsClearHistoryConfirmTitle = "Clear history?",
+    settingsClearHistoryConfirmMessage = "This deletes every analysis saved in this session and cannot be undone.",
+    settingsClearHistoryConfirmButton = "Clear",
+    settingsClearHistoryCancelButton = "Cancel",
+    settingsAboutSection = "About",
+    settingsAboutVersion = "OcuCheck AI · version 1.0",
+    settingsAboutDescription = "An eye disease screening support tool. It does not replace a professional eye exam.",
+    onboardingSkip = "Skip",
+    onboardingNext = "Next",
+    onboardingStart = "Get started",
+    onboardingTitle1 = "Take care of your vision",
+    onboardingBody1 = "OcuCheck AI analyzes a photo of your eye, taken with your phone's camera, and estimates the probability of eight common eye conditions.",
+    onboardingTitle2 = "Everything stays on your phone",
+    onboardingBody2 = "The analysis runs entirely on the device: your photo is never sent to a server and no internet connection is needed.",
+    onboardingTitle3 = "This is not a diagnosis",
+    onboardingBody3 = "This app is a screening support tool, not a medical diagnosis. If in doubt or you notice symptoms, see an eye doctor."
 )
 
 fun AppLanguage.strings(): AppStrings = when (this) {

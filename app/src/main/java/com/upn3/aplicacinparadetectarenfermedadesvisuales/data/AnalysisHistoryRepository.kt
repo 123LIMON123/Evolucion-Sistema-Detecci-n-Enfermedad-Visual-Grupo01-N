@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 interface AnalysisHistoryRepository {
     val history: StateFlow<List<DiagnosisResult>>
     fun record(result: DiagnosisResult)
+    fun clear()
 }
 
 /**
@@ -28,5 +29,9 @@ class InMemoryAnalysisHistoryRepository : AnalysisHistoryRepository {
 
     override fun record(result: DiagnosisResult) {
         _history.value = _history.value + result
+    }
+
+    override fun clear() {
+        _history.value = emptyList()
     }
 }

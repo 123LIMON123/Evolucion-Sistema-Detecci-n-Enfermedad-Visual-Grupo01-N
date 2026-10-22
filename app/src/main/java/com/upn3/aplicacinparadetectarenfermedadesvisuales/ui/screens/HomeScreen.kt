@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -109,6 +110,13 @@ fun HomeScreen(navController: NavController, localizationRepository: Localizatio
                     description = strings.profileDescription,
                     accent = MaterialTheme.colorScheme.primary,
                     route = "profile"
+                ),
+                HomeMenuItem(
+                    icon = Icons.Filled.Settings,
+                    title = strings.settingsNav,
+                    description = strings.settingsDescription,
+                    accent = MaterialTheme.colorScheme.secondary,
+                    route = "settings"
                 )
             )
 
