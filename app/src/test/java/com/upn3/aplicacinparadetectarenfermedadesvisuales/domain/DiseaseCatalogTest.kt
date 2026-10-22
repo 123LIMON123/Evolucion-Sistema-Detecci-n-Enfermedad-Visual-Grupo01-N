@@ -16,7 +16,7 @@ class DiseaseCatalogTest {
 
     // Debe coincidir exactamente con LABEL_COLS en ml/train.py: si el modelo se vuelve a
     // entrenar con otro orden/cantidad de clases sin actualizar esto, esta prueba lo detecta.
-    private val modelLabelOrder = listOf("N", "D", "G", "C", "A", "H", "M", "O")
+    private val modelLabelOrder = listOf("N", "D", "G", "C", "A", "H", "M", "O", "CONJ")
 
     @Test
     fun `every label the model can output exists in the catalog`() {

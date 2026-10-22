@@ -24,11 +24,12 @@ object DiseaseCatalog {
         val code: String,
         val es: LocalizedDiseaseInfo,
         val en: LocalizedDiseaseInfo,
-        // La mayoria de estas entradas corresponden a una de las 8 salidas del modelo (mismo
-        // `code` que usa TFLiteDiseaseClassifier). El astigmatismo es la excepcion: es un error
-        // refractivo (forma de la cornea), no una condicion visible en una foto de fondo de ojo
-        // como si lo son las otras siete, asi que no tiene sentido clinico que un modelo entrenado
-        // con fotos intente "detectarlo". Se deja como contenido puramente informativo.
+        // La mayoria de estas entradas corresponden a una de las 9 salidas del modelo (mismo
+        // `code` que usa TFLiteDiseaseClassifier: 8 de fondo de ojo + CONJ de foto de ojo
+        // externo). El astigmatismo es la excepcion: es un error refractivo (forma de la
+        // cornea), no una condicion visible en ninguna foto del ojo (ni de fondo ni externa),
+        // asi que no tiene sentido clinico que un modelo entrenado con fotos intente
+        // "detectarlo". Se deja como contenido puramente informativo.
         val isDetectableByModel: Boolean = true
     ) {
         fun localized(language: AppLanguage): LocalizedDiseaseInfo = when (language) {
@@ -156,6 +157,27 @@ object DiseaseCatalog {
                 description = "Other eye abnormalities not classified in the categories above.",
                 symptoms = listOf("Variable depending on the abnormality detected"),
                 recommendation = "Consult an ophthalmologist for a detailed evaluation."
+            )
+        ),
+        DiseaseInfo(
+            code = "CONJ",
+            es = LocalizedDiseaseInfo(
+                name = "Conjuntivitis",
+                description = "Inflamacion de la conjuntiva (la membrana que cubre la parte blanca del ojo y el " +
+                    "interior de los parpados), generalmente causada por una infeccion viral, bacteriana o una " +
+                    "reaccion alergica. A diferencia de las otras 8 clases, se detecta en una foto del ojo por " +
+                    "fuera, no de fondo de ojo.",
+                symptoms = listOf("Enrojecimiento del ojo", "Picazon o ardor", "Secrecion o legañas", "Sensacion de cuerpo extraño"),
+                recommendation = "Evite tocarse los ojos y compartir toallas; consulte a un medico si no mejora en pocos dias o si hay dolor o cambios en la vision."
+            ),
+            en = LocalizedDiseaseInfo(
+                name = "Conjunctivitis",
+                description = "Inflammation of the conjunctiva (the membrane covering the white of the eye and the " +
+                    "inside of the eyelids), usually caused by a viral or bacterial infection or an allergic " +
+                    "reaction. Unlike the other 8 classes, it is detected from a photo of the outside of the eye, " +
+                    "not a fundus photo.",
+                symptoms = listOf("Redness of the eye", "Itching or burning", "Discharge or crusting", "Feeling of a foreign body"),
+                recommendation = "Avoid touching your eyes and sharing towels; see a doctor if it doesn't improve in a few days or if there is pain or vision changes."
             )
         ),
         DiseaseInfo(
