@@ -1,6 +1,7 @@
 """
-Entrena un clasificador multi-etiqueta (N, D, G, C, A, H, M, O) de enfermedades
-oculares sobre el dataset ODIR-5K y exporta un .tflite listo para la app Android.
+Entrena un clasificador multi-etiqueta (N, D, G, C, A, H, M, O, CONJ) de enfermedades
+oculares sobre el dataset ODIR-5K (fondo de ojo) mas conjuntivitis (ojo externo, ver
+INCLUDE_EXTERNAL_CONJUNCTIVITIS mas abajo), y exporta un .tflite listo para la app Android.
 
 Requiere: ml/data/full_df.csv y ml/data/preprocessed_images/*.jpg
 (descargados de https://www.kaggle.com/datasets/andrewmvd/ocular-disease-recognition-odir5k)
@@ -38,9 +39,27 @@ CSV_PATH = os.path.join(DATA_DIR, "full_df.csv")
 # ml/EXTERNAL_DATASETS.md) sigue el mismo mecanismo.
 INCLUDE_EXTERNAL_MYOPIA = False
 EXTERNAL_MYOPIA_CSV = os.path.join(DATA_DIR, "external_myopia.csv")
+
+# 1857 imagenes con retinopatia diabetica confirmada (diagnosis >= 1) del dataset APTOS 2019
+# (Kaggle, "aptos2019-blindness-detection"), para la clase D. A diferencia de M, D NO es
+# minoritaria en ODIR-5K (2123 de 6392 filas, la segunda clase mas grande), pero su AUC medido es
+# bajo (~0.70) pese a eso. INCLUDE_EXTERNAL_DIABETES empieza en True para probarlo: si el AUC de D
+# no mejora (mismo patron que paso con M), se pasa a False y se documenta el hallazgo en
+# ml/EXTERNAL_DATASETS.md igual que con miopia.
+INCLUDE_EXTERNAL_DIABETES = True
+EXTERNAL_DIABETES_CSV = os.path.join(DATA_DIR, "external_diabetes.csv")
+
+# 548 imagenes de conjuntivitis (mas 1167 de ojo externo sano, usadas como negativos) de dos
+# datasets de Kaggle (alisofiya/conjunctivitis, revengerdna/conjunctivitis-dataset). A diferencia
+# de M y D, esto no es "mas datos para una clase existente": conjuntivitis se ve en una foto del
+# ojo por fuera (esclerotica, parpados), no en una foto de fondo de ojo como las 8 clases de
+# ODIR-5K, asi que agrega una 9na clase nueva en vez de reforzar una existente.
+INCLUDE_EXTERNAL_CONJUNCTIVITIS = True
+EXTERNAL_CONJUNCTIVITIS_CSV = os.path.join(DATA_DIR, "external_conjunctivitis.csv")
+
 OUT_DIR = os.path.dirname(__file__)
 
-LABEL_COLS = ["N", "D", "G", "C", "A", "H", "M", "O"]
+LABEL_COLS = ["N", "D", "G", "C", "A", "H", "M", "O", "CONJ"]
 IMG_SIZE = 160
 BATCH_SIZE = 32
 SEED = 42
@@ -54,18 +73,37 @@ def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
+def _read_labels_csv(csv_path):
+    """Lee un CSV de etiquetas y lo reindexa a LABEL_COLS, rellenando con 0 las columnas que
+    ese CSV no tenga (ej. full_df.csv y external_myopia/diabetes.csv solo tienen 8 columnas,
+    sin CONJ; external_conjunctivitis.csv ya trae las 9)."""
+    raw = pd.read_csv(csv_path)
+    present = [c for c in LABEL_COLS if c in raw.columns]
+    out = raw[["filename"] + present].copy()
+    for col in LABEL_COLS:
+        if col not in out.columns:
+            out[col] = 0
+    return out[["filename"] + LABEL_COLS]
+
+
 def load_dataset():
     log("Leyendo CSV de etiquetas...")
-    df = pd.read_csv(CSV_PATH)[["filename"] + LABEL_COLS]
+    df = _read_labels_csv(CSV_PATH)
 
-    if INCLUDE_EXTERNAL_MYOPIA and os.path.exists(EXTERNAL_MYOPIA_CSV):
-        external_df = pd.read_csv(EXTERNAL_MYOPIA_CSV)[["filename"] + LABEL_COLS]
-        log(f"Sumando {len(external_df)} imagenes externas de miopia patologica (JSIEC-1000 + RFMiD 2.0)")
-        # Limitacion conocida: de estas imagenes solo se confirmo la etiqueta de miopia desde su
-        # dataset de origen (M=1); las otras 7 columnas quedan en 0 aunque el ojo pueda tener
-        # ademas otra condicion no reportada por esa fuente. Es ruido de etiqueta aceptado a
-        # cambio de mas datos para la clase minoritaria M; ver ml/EXTERNAL_DATASETS.md.
-        df = pd.concat([df, external_df], ignore_index=True)
+    external_sources = [
+        (INCLUDE_EXTERNAL_MYOPIA, EXTERNAL_MYOPIA_CSV, "miopia patologica (JSIEC-1000 + RFMiD 2.0)"),
+        (INCLUDE_EXTERNAL_DIABETES, EXTERNAL_DIABETES_CSV, "retinopatia diabetica (APTOS 2019)"),
+        (INCLUDE_EXTERNAL_CONJUNCTIVITIS, EXTERNAL_CONJUNCTIVITIS_CSV, "conjuntivitis (Kaggle, ojo externo)"),
+    ]
+    for enabled, csv_path, description in external_sources:
+        if enabled and os.path.exists(csv_path):
+            external_df = _read_labels_csv(csv_path)
+            log(f"Sumando {len(external_df)} imagenes externas de {description}")
+            # Limitacion conocida (todas las fuentes): solo se confirmo la etiqueta de la clase que
+            # motivo la busqueda desde su dataset de origen; las demas columnas quedan en 0 aunque
+            # el ojo pueda tener otra condicion no reportada por esa fuente puntual. Es ruido de
+            # etiqueta aceptado a cambio de mas datos; ver ml/EXTERNAL_DATASETS.md.
+            df = pd.concat([df, external_df], ignore_index=True)
 
     df = df[df["filename"].apply(lambda f: os.path.exists(os.path.join(IMAGES_DIR, f)))]
     log(f"{len(df)} imagenes con archivo presente en preprocessed_images/")
@@ -124,7 +162,7 @@ def main():
         pos = labels[train_idx, i].sum()
         neg = len(train_idx) - pos
         class_weights[i] = float(neg / max(pos, 1)) if pos > 0 else 1.0
-    log(f"Pesos por clase (para referencia): {dict(zip(LABEL_COLS, [round(class_weights[i], 2) for i in range(8)]))}")
+    log(f"Pesos por clase (para referencia): {dict(zip(LABEL_COLS, [round(class_weights[i], 2) for i in range(len(LABEL_COLS))]))}")
 
     # Aumentacion mas fuerte que antes (flip+brillo+contraste): se le suma rotacion, zoom y
     # saturacion para que el modelo generalice mejor con pocas imagenes por clase minoritaria
@@ -159,7 +197,7 @@ def main():
 
     # aproximamos el peso por clase con un vector aplicado via loss ponderada,
     # ya que Keras no soporta class_weight directo en salidas multi-etiqueta.
-    weight_vec = tf.constant([class_weights[i] for i in range(8)], dtype=tf.float32)
+    weight_vec = tf.constant([class_weights[i] for i in range(len(LABEL_COLS))], dtype=tf.float32)
 
     def weighted_bce(y_true, y_pred):
         bce = tf.keras.losses.binary_crossentropy(y_true, y_pred)
