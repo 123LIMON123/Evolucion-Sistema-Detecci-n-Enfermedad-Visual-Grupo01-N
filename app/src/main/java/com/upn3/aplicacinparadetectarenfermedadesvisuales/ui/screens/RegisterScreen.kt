@@ -1,5 +1,6 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,10 +9,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -22,6 +27,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -45,6 +52,9 @@ private fun errorMessageFor(reason: AuthFailureReason, strings: AppStrings): Str
  *
  * [Principio D - DIP] Depende de [AuthViewModel], nunca de una implementacion concreta de
  * `AuthRepository`/`UserSessionRepository`.
+ *
+ * Mismo tratamiento visual que LoginScreen (degrade arriba + tarjeta blanca abajo) para que el
+ * flujo de autenticacion se sienta como una sola familia de pantallas, no dos estilos distintos.
  */
 @Composable
 fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
@@ -82,91 +92,134 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(
+                Brush.verticalGradient(
+                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
+                )
+            )
     ) {
-        Text(
-            text = strings.registerTitle,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = strings.registerSubtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it; validationError = null },
-            label = { Text(strings.nameLabel) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(0.9f),
-            shape = MaterialTheme.shapes.medium
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it; validationError = null },
-            label = { Text(strings.emailLabel) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(0.9f),
-            shape = MaterialTheme.shapes.medium
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it; validationError = null },
-            label = { Text(strings.passwordLabel) },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(0.9f),
-            shape = MaterialTheme.shapes.medium
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it; validationError = null },
-            label = { Text(strings.confirmPasswordLabel) },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(0.9f),
-            shape = MaterialTheme.shapes.medium
-        )
-
-        if (errorMessage != null) {
-            Spacer(modifier = Modifier.height(12.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
+                text = strings.registerTitle,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = strings.registerSubtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                 textAlign = TextAlign.Center
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = { attemptRegister() },
-            enabled = !isLoading,
-            modifier = Modifier.fillMaxWidth(0.8f),
-            shape = MaterialTheme.shapes.medium
+        Surface(
+            modifier = Modifier.fillMaxWidth().fillMaxSize(),
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 12.dp
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-            } else {
-                Text(text = strings.registerButton)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 28.dp, vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it; validationError = null },
+                    label = { Text(strings.nameLabel) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = registerFieldColors()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it; validationError = null },
+                    label = { Text(strings.emailLabel) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = registerFieldColors()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it; validationError = null },
+                    label = { Text(strings.passwordLabel) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = registerFieldColors()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it; validationError = null },
+                    label = { Text(strings.confirmPasswordLabel) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = registerFieldColors()
+                )
+
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    onClick = { attemptRegister() },
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text(text = strings.registerButton, style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                TextButton(onClick = {
+                    viewModel.clearError()
+                    navController.popBackStack()
+                }) {
+                    Text(text = strings.backToLogin, color = MaterialTheme.colorScheme.primary)
+                }
             }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        TextButton(onClick = {
-            viewModel.clearError()
-            navController.popBackStack()
-        }) {
-            Text(text = strings.backToLogin)
         }
     }
 }
+
+@Composable
+private fun registerFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    cursorColor = MaterialTheme.colorScheme.primary
+)
