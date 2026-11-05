@@ -16,7 +16,12 @@ class DiseaseCatalogTest {
 
     // Debe coincidir exactamente con LABEL_COLS en ml/train.py: si el modelo se vuelve a
     // entrenar con otro orden/cantidad de clases sin actualizar esto, esta prueba lo detecta.
-    private val modelLabelOrder = listOf("N", "D", "G", "C", "A", "H", "M", "O", "CONJ")
+    private val modelLabelOrder = listOf("N", "C", "CONJ")
+
+    // Codigos que siguen en el catalogo como informacion de referencia pero que el modelo de
+    // foto externa (N, C, CONJ) no puede detectar: D/G/A/H/M/O son hallazgos de fondo de ojo,
+    // AST es un error refractivo. Ver ml/EXTERNAL_DATASETS.md.
+    private val informationOnlyCodes = listOf("D", "G", "A", "H", "M", "O", "AST")
 
     @Test
     fun `every label the model can output exists in the catalog`() {
@@ -70,9 +75,22 @@ class DiseaseCatalogTest {
         val astigmatism = DiseaseCatalog.byCode("AST")
         assertNotNull("El catalogo deberia incluir astigmatismo como entrada informativa", astigmatism)
         assertTrue(
-            "Astigmatismo no deberia marcarse como detectable: no es visible en una foto de fondo de ojo",
+            "Astigmatismo no deberia marcarse como detectable: no es visible en ninguna foto del ojo",
             astigmatism!!.isDetectableByModel.not()
         )
         assertTrue("'AST' no deberia estar entre las salidas del modelo", "AST" !in modelLabelOrder)
+    }
+
+    @Test
+    fun `fundus-only codes are informational, not a model output`() {
+        informationOnlyCodes.forEach { code ->
+            val disease = DiseaseCatalog.byCode(code)
+            assertNotNull("El catalogo deberia incluir '$code' como entrada informativa", disease)
+            assertTrue(
+                "'$code' no deberia marcarse como detectable: no es visible en una foto de ojo externo",
+                disease!!.isDetectableByModel.not()
+            )
+            assertTrue("'$code' no deberia estar entre las salidas del modelo", code !in modelLabelOrder)
+        }
     }
 }
