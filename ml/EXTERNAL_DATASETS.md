@@ -1,6 +1,12 @@
 # Datasets externos evaluados para reforzar el modelo
 
-El dataset principal de entrenamiento es **ODIR-5K**
+> **Actualizacion importante (ver seccion "Correccion de alcance" al final):**
+> el modelo que se shipea hoy en `app/src/main/assets/ocular_disease_model.tflite`
+> tiene **3 clases** (N, C, CONJ), no 9. Todo lo de abajo describe el proceso
+> historico que llevo a esa correccion — se deja documentado completo porque
+> explica el porque, no porque siga vigente tal cual.
+
+El dataset principal de entrenamiento original fue **ODIR-5K**
 (`ml/data/full_df.csv` + `ml/data/preprocessed_images/`, fotos de fondo de
 ojo, 8 clases: N, D, G, C, A, H, M, O). Se evaluaron tres fuentes externas
 para intentar mejorar clases especificas. Resultado resumido:
@@ -173,3 +179,78 @@ kaggle datasets download revengerdna/conjunctivitis-dataset -p ml/external_raw
 
 Luego correr el script de extraccion correspondiente a cada fuente (ver el
 historial de commits de este archivo y de `ml/train.py`).
+
+---
+
+## Correccion de alcance: de 9 clases (fondo de ojo) a 3 (foto externa)
+
+### El problema
+
+La app le pide al usuario una foto del ojo **por fuera**, con la camara
+normal del celular ("Centra el ojo dentro del aro" — ver
+`qualityPositioning` en `AppStrings.kt`). Pero el modelo de 9 clases
+descrito arriba se entreno casi por completo con **ODIR-5K**, un dataset de
+fotos de **fondo de ojo** (retina), tomadas con una camara de fondo de ojo
+especializada a traves de la pupila dilatada — un tipo de foto que ninguna
+camara de celular puede producir.
+
+Esto es un problema clinico, no de cantidad de datos: de las 8 clases de
+ODIR-5K, los hallazgos de **D** (retinopatia diabetica), **A** (degeneracion
+macular), **H** (retinopatia hipertensiva) y **O** (otras, igualmente de
+fondo de ojo) ocurren *dentro* de la retina y son invisibles en cualquier
+foto externa sin importar que tan bueno sea el dataset. **M** (miopia) es un
+error refractivo (forma/longitud del ojo), tampoco visible en ninguna foto.
+**G** (glaucoma) solo tiene signos externos en la crisis aguda de angulo
+cerrado, una presentacion rara y distinta del glaucoma cronico habitual, y
+no existe dataset publico descargable para eso. La unica excepcion real es
+**C** (catarata): en estadio avanzado produce una opacidad blanquecina
+visible en la pupila en una foto externa normal.
+
+Esto ya se habia notado de pasada al agregar CONJ (ver seccion 3 arriba:
+"a diferencia de M y D, conjuntivitis... se ve en una foto del ojo por
+fuera... de hecho, el tipo de foto que la camara del celular realmente
+captura"), pero no se habia sacado la conclusion de que eso mismo invalida
+D/G/A/H/M/O como clases "detectables" por esta app.
+
+### La correccion
+
+Se busco un dataset de foto externa para catarata (la unica clase de
+ODIR-5K rescatable) y se encontro:
+
+| Dataset | Plataforma | Imagenes | Licencia |
+|---|---|---|---|
+| [`rifdana/cataract-photo-image-dataset`](https://www.kaggle.com/datasets/rifdana/cataract-photo-image-dataset) | Kaggle | 3227 (2124 catarata: 986 immature + 1138 mature; 1103 normal) | CC BY-SA 4.0 |
+
+El modelo se reentreno desde cero con **solo 3 clases, las 3 entrenadas
+exclusivamente con foto de ojo externo** (ODIR-5K deja de usarse por
+completo):
+
+- **N** (normal): 1103 imagenes del dataset de catarata + 1167 imagenes
+  "sin conjuntivitis" del dataset de conjuntivitis (ver nota de
+  re-etiquetado abajo).
+- **C** (catarata): 2124 imagenes del dataset de catarata.
+- **CONJ** (conjuntivitis): 548 imagenes, sin cambios respecto a la
+  seccion 3.
+
+**Nota sobre el re-etiquetado de N:** `external_conjunctivitis.csv` trae
+las 1167 filas "sin conjuntivitis" con las 9 columnas en 0 (no se confirmo
+que fueran "normales" en el sentido de ODIR-5K, solo que no tenian
+conjuntivitis). Para el modelo de 3 clases, donde N pasa a significar "ojo
+externo sin signos de catarata ni conjuntivitis", `ml/train.py` las
+reetiqueta N=1 en tiempo de carga (no se edita el CSV original). Es una
+redefinicion deliberada de que significa "normal" en este contexto, no un
+error.
+
+### D/G/A/H/M/O y astigmatismo: que pasa con ellos ahora
+
+Siguen en `DiseaseCatalog.kt` como contenido informativo
+(`isDetectableByModel = false`, mismo patron ya usado para astigmatismo),
+con su descripcion actualizada para explicar por que esta app no puede
+detectarlos. No se borraron del catalogo: siguen siendo utiles como
+informacion de referencia, solo dejan de aparecer como salidas del modelo.
+
+### Resultado
+
+`LABEL_COLS = ["N", "C", "CONJ"]` en `ml/train.py`. Métricas de la corrida
+de reentrenamiento: ver `ml/train_external3_run1.log` y el resumen al pie
+de este documento (seccion agregada tras correr el entrenamiento).

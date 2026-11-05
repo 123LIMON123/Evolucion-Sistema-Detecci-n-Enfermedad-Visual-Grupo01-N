@@ -55,12 +55,15 @@ class AppContainer(context: Context) {
     // crea EyeDiseaseApp una unica vez).
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    // El modelo se entreno con MobileNetV2 a 160x160 y estas 9 clases, en este orden exacto
-    // (ver ml/train.py, LABEL_COLS). Las primeras 8 vienen de fotos de fondo de ojo (ODIR-5K +
-    // refuerzo de miopia/diabetes); CONJ (conjuntivitis) viene de fotos de ojo externo (Kaggle).
-    // Este orden es un detalle de la estructura de tensores del .tflite, por eso vive junto a
-    // donde se construye el clasificador concreto.
-    private val modelLabelOrder = listOf("N", "D", "G", "C", "A", "H", "M", "O", "CONJ")
+    // El modelo se entreno con MobileNetV2 a 160x160 y estas 3 clases, en este orden exacto
+    // (ver ml/train.py, LABEL_COLS). Las 3 vienen de fotos de ojo EXTERNO (camara normal del
+    // celular, no fondo de ojo): N (normal), C (catarata, visible en estadio avanzado) y CONJ
+    // (conjuntivitis). El modelo anterior tenia 9 clases entrenadas en su mayoria con fotos de
+    // fondo de ojo (ODIR-5K), un dominio visual que la camara del celular nunca captura; ver
+    // ml/EXTERNAL_DATASETS.md para el detalle de por que se redujo a estas 3. Este orden es un
+    // detalle de la estructura de tensores del .tflite, por eso vive junto a donde se construye
+    // el clasificador concreto.
+    private val modelLabelOrder = listOf("N", "C", "CONJ")
     private val MODEL_INPUT_SIZE = 160
 
     val imagePreprocessor: ImagePreprocessor = ImagePreprocessor(
