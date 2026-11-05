@@ -93,6 +93,14 @@ class DataStoreUserSessionRepository(
         }
     }
 
+    override fun updateProfile(name: String, email: String) {
+        if (!isLoggedIn.value) return
+        writeSession {
+            it[SessionKeys.NAME] = name
+            it[SessionKeys.EMAIL] = email
+        }
+    }
+
     private fun writeSession(edit: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {
         externalScope.launch {
             try {
