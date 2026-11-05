@@ -95,7 +95,14 @@ fun AppNavHost(navController: NavHostController, appContainer: AppContainer) {
             HistoryScreen(navController, appContainer.historyRepository, appContainer.localizationRepository)
         }
         composable("profile") {
-            ProfileScreen(navController, appContainer.userSessionRepository, appContainer.localizationRepository)
+            ProfileScreen(
+                navController,
+                appContainer.userSessionRepository,
+                appContainer.localizationRepository,
+                appContainer.authRepository,
+                appContainer.themeRepository,
+                appContainer.historyRepository
+            )
         }
         composable("settings") {
             SettingsScreen(navController, appContainer.localizationRepository, appContainer.historyRepository)

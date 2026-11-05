@@ -3,6 +3,8 @@ package com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthFailureReason
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthResult
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.PasswordChangeFailureReason
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.PasswordChangeResult
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.UserProfile
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.UserSessionRepository
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +39,9 @@ private class FakeAuthRepository : AuthRepository {
         lastLoginEmail = email
         return loginResult
     }
+
+    override fun changePassword(email: String, currentPassword: String, newPassword: String): PasswordChangeResult =
+        PasswordChangeResult.Failure(PasswordChangeFailureReason.WRONG_CURRENT_PASSWORD)
 }
 
 /** Doble de prueba de [UserSessionRepository]: guarda en memoria, sin DataStore. */
@@ -54,6 +59,10 @@ private class FakeUserSessionRepository : UserSessionRepository {
 
     override fun logout() {
         _isLoggedIn.value = false
+    }
+
+    override fun updateProfile(name: String, email: String) {
+        _currentUser.value = UserProfile(name = name, email = email)
     }
 }
 

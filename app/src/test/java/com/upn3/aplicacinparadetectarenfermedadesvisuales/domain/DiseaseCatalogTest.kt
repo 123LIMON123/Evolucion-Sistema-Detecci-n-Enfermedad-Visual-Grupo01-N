@@ -20,8 +20,9 @@ class DiseaseCatalogTest {
 
     // Codigos que siguen en el catalogo como informacion de referencia pero que el modelo de
     // foto externa (N, C, CONJ) no puede detectar: D/G/A/H/M/O son hallazgos de fondo de ojo,
-    // AST es un error refractivo. Ver ml/EXTERNAL_DATASETS.md.
-    private val informationOnlyCodes = listOf("D", "G", "A", "H", "M", "O", "AST")
+    // AST es un error refractivo, y PTER/PTOS/DRY son condiciones externas visibles pero para
+    // las que el modelo todavia no fue entrenado (v1.1). Ver ml/EXTERNAL_DATASETS.md.
+    private val informationOnlyCodes = listOf("D", "G", "A", "H", "M", "O", "AST", "PTER", "PTOS", "DRY")
 
     @Test
     fun `every label the model can output exists in the catalog`() {

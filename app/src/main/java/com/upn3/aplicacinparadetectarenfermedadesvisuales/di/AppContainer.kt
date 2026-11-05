@@ -12,6 +12,8 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryAuthRepos
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryLocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.OnboardingRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.DataStoreThemeRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.ThemeRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.UserSessionRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.MedicalDiagnosticInterpreter
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ml.EyeDiseaseClassifier
@@ -36,6 +38,10 @@ private val Context.sessionDataStore by preferencesDataStore(name = "user_sessio
 // archivo de preferencias como un singleton por Context, asi que una preferencia nueva que no
 // tiene nada que ver con la sesion va en su propio archivo en vez de reutilizar sessionDataStore.
 private val Context.onboardingDataStore by preferencesDataStore(name = "onboarding")
+
+// DataStore para la preferencia de tema (modo oscuro), igual criterio que onboardingDataStore:
+// no tiene nada que ver con la sesion, va en su propio archivo.
+private val Context.themeDataStore by preferencesDataStore(name = "theme")
 
 /**
  * [Principio S - SRP] Unica responsabilidad: cablear (instanciar y conectar) las implementaciones
@@ -105,6 +111,11 @@ class AppContainer(context: Context) {
 
     val onboardingRepository: OnboardingRepository = DataStoreOnboardingRepository(
         dataStore = context.applicationContext.onboardingDataStore,
+        externalScope = appScope
+    )
+
+    val themeRepository: ThemeRepository = DataStoreThemeRepository(
+        dataStore = context.applicationContext.themeDataStore,
         externalScope = appScope
     )
 }
