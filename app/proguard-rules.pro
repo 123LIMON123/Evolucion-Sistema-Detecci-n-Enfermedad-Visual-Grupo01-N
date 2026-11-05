@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# TensorFlow Lite: la app solo usa el interprete de CPU (ver TFLiteDiseaseClassifier.kt), nunca
+# el delegado de GPU, pero tensorflow-lite-support referencia esas clases opcionalmente. Sin esta
+# regla, R8 falla el build con "Missing classes" aunque el codigo nunca las ejecute.
+-dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options$GpuBackend
+-dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options
