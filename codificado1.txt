@@ -1,0 +1,10 @@
+Ejercicio de la Semana 12 - Sistema de control de versiones Git
+Universidad Privada del Norte - Evolucion y Configuracion de Software
+
+Este archivo se crea para practicar el flujo basico de Git:
+1. Modificar un archivo en el directorio de trabajo.
+2. Prepararlo (staged).
+3. Confirmarlo (commit).
+4. Revisar el historial del repositorio.
+5. Crear una rama.
+6. Traer los cambios de la rama a master/main.
