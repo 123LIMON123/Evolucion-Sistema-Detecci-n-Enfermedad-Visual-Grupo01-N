@@ -8,3 +8,6 @@ Este archivo se crea para practicar el flujo basico de Git:
 4. Revisar el historial del repositorio.
 5. Crear una rama.
 6. Traer los cambios de la rama a master/main.
+
+Linea agregada desde la rama feature/codificado1, para despues
+traerla (merge) a main.
