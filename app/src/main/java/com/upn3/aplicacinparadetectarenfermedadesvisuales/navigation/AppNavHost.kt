@@ -105,7 +105,12 @@ fun AppNavHost(navController: NavHostController, appContainer: AppContainer) {
             )
         }
         composable("settings") {
-            SettingsScreen(navController, appContainer.localizationRepository, appContainer.historyRepository)
+            SettingsScreen(
+                navController,
+                appContainer.localizationRepository,
+                appContainer.historyRepository,
+                appContainer.reminderRepository
+            )
         }
     }
 }

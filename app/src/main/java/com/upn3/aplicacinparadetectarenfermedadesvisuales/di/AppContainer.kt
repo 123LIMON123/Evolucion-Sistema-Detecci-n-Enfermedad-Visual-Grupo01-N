@@ -12,6 +12,8 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryAuthRepos
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryLocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.OnboardingRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.DataStoreReminderRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.ReminderRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.DataStoreThemeRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.ThemeRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.UserSessionRepository
@@ -42,6 +44,9 @@ private val Context.onboardingDataStore by preferencesDataStore(name = "onboardi
 // DataStore para la preferencia de tema (modo oscuro), igual criterio que onboardingDataStore:
 // no tiene nada que ver con la sesion, va en su propio archivo.
 private val Context.themeDataStore by preferencesDataStore(name = "theme")
+
+// DataStore para la preferencia de recordatorios, mismo criterio.
+private val Context.reminderDataStore by preferencesDataStore(name = "reminders")
 
 /**
  * [Principio S - SRP] Unica responsabilidad: cablear (instanciar y conectar) las implementaciones
@@ -116,6 +121,11 @@ class AppContainer(context: Context) {
 
     val themeRepository: ThemeRepository = DataStoreThemeRepository(
         dataStore = context.applicationContext.themeDataStore,
+        externalScope = appScope
+    )
+
+    val reminderRepository: ReminderRepository = DataStoreReminderRepository(
+        dataStore = context.applicationContext.reminderDataStore,
         externalScope = appScope
     )
 }
