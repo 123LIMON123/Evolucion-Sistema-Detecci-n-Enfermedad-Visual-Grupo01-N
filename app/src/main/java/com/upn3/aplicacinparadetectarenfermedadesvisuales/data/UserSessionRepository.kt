@@ -26,6 +26,8 @@ interface UserSessionRepository {
     val currentUser: StateFlow<UserProfile>
     fun login(profile: UserProfile)
     fun logout()
+    /** Actualiza nombre/correo del usuario en sesion. No hace nada si no hay sesion activa. */
+    fun updateProfile(name: String, email: String)
 }
 
 /**
@@ -54,5 +56,10 @@ class InMemoryUserSessionRepository : UserSessionRepository {
     override fun logout() {
         _isLoggedIn.value = false
         _currentUser.value = UserProfile(name = "", email = "")
+    }
+
+    override fun updateProfile(name: String, email: String) {
+        if (!_isLoggedIn.value) return
+        _currentUser.value = UserProfile(name = name, email = email)
     }
 }

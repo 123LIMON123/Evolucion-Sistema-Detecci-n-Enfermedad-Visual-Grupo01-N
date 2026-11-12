@@ -251,6 +251,19 @@ informacion de referencia, solo dejan de aparecer como salidas del modelo.
 
 ### Resultado
 
-`LABEL_COLS = ["N", "C", "CONJ"]` en `ml/train.py`. Métricas de la corrida
-de reentrenamiento: ver `ml/train_external3_run1.log` y el resumen al pie
-de este documento (seccion agregada tras correr el entrenamiento).
+`LABEL_COLS = ["N", "C", "CONJ"]` en `ml/train.py`. Se corrio el
+entrenamiento dos veces para confirmar que el resultado es reproducible,
+mismo criterio que se uso para M y D en las secciones anteriores:
+
+| Corrida | AUC de validacion (3 clases) | Log |
+|---|---|---|
+| 1 | 0.9950 | `ml/train_external3_run1.log` |
+| 2 | 0.9948 | `ml/train_external3_run2.log` |
+
+Las dos corridas dan practicamente el mismo resultado (diferencia de
+0.0002), confirmando que el 0.995 no es una casualidad de la particion
+train/val — es consistente con que las 3 clases son visualmente muy
+distintas entre si (ojo externo sano vs. opacidad de catarata vs.
+enrojecimiento de conjuntivitis) y sin la mezcla de dominios del modelo
+anterior. El modelo shipeado en `app/src/main/assets/ocular_disease_model.tflite`
+es el de la corrida 2 (la mas reciente).

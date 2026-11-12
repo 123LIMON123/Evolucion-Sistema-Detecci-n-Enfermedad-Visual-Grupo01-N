@@ -11,6 +11,16 @@ sealed interface AuthResult {
     data class Failure(val reason: AuthFailureReason) : AuthResult
 }
 
+enum class PasswordChangeFailureReason {
+    WRONG_CURRENT_PASSWORD,
+    NEW_PASSWORD_TOO_SHORT
+}
+
+sealed interface PasswordChangeResult {
+    data object Success : PasswordChangeResult
+    data class Failure(val reason: PasswordChangeFailureReason) : PasswordChangeResult
+}
+
 /**
  * [Principio D - DIP] Abstraccion de la que dependen las capas de arriba (AuthViewModel). Un
  * modulo de alto nivel (el ViewModel, la pantalla) no depende de "como se valida un login" en
@@ -21,6 +31,7 @@ sealed interface AuthResult {
 interface AuthRepository {
     fun register(name: String, email: String, password: String): AuthResult
     fun login(email: String, password: String): AuthResult
+    fun changePassword(email: String, currentPassword: String, newPassword: String): PasswordChangeResult
 }
 
 /**
@@ -59,6 +70,23 @@ class InMemoryAuthRepository : AuthRepository {
         } else {
             AuthResult.Failure(AuthFailureReason.INVALID_CREDENTIALS)
         }
+    }
+
+    override fun changePassword(
+        email: String,
+        currentPassword: String,
+        newPassword: String
+    ): PasswordChangeResult {
+        val normalizedEmail = email.trim().lowercase()
+        val account = accountsByEmail[normalizedEmail]
+        if (account == null || account.password != currentPassword) {
+            return PasswordChangeResult.Failure(PasswordChangeFailureReason.WRONG_CURRENT_PASSWORD)
+        }
+        if (newPassword.length < MIN_PASSWORD_LENGTH) {
+            return PasswordChangeResult.Failure(PasswordChangeFailureReason.NEW_PASSWORD_TOO_SHORT)
+        }
+        accountsByEmail[normalizedEmail] = account.copy(password = newPassword)
+        return PasswordChangeResult.Success
     }
 
     companion object {

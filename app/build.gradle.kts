@@ -13,8 +13,8 @@ android {
         applicationId = "com.upn3.aplicacinparadetectarenfermedadesvisuales"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -83,6 +83,9 @@ dependencies {
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
+
+    // WorkManager (recordatorio periodico de chequeo)
+    implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

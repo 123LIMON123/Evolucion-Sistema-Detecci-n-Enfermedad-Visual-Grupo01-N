@@ -242,6 +242,75 @@ object DiseaseCatalog {
                 symptoms = listOf("Blurred or distorted vision at any distance", "Eye strain", "Headaches", "Frequent squinting"),
                 recommendation = "Diagnosed with a refraction exam, not a photo; consult an optometrist or ophthalmologist."
             )
+        ),
+        // Las tres siguientes (v1.1) son condiciones visibles en foto externa, igual que CONJ y
+        // C, pero quedan como informativas (isDetectableByModel = false) porque el modelo actual
+        // no se entreno para reconocerlas: agregar una clase nueva de verdad requiere un dataset
+        // etiquetado y un reentrenamiento (ver ml/EXTERNAL_DATASETS.md), no solo texto.
+        DiseaseInfo(
+            code = "PTER",
+            isDetectableByModel = false,
+            es = LocalizedDiseaseInfo(
+                name = "Pterigión",
+                description = "Crecimiento carnoso y triangular de tejido conjuntival que avanza desde la " +
+                    "esclerótica hacia la córnea, asociado a la exposición prolongada al sol, el viento y el " +
+                    "polvo. Es visible en una foto del ojo por fuera, pero este modelo todavía no fue " +
+                    "entrenado para reconocerlo: se incluye aquí solo como información de referencia.",
+                symptoms = listOf("Bulto carnoso visible en el ojo", "Enrojecimiento e irritación", "Sensación de cuerpo extraño", "Visión borrosa si avanza sobre la córnea"),
+                recommendation = "Use lentes de sol con protección UV; consulte a un oftalmólogo si crece o afecta la visión, puede requerir cirugía."
+            ),
+            en = LocalizedDiseaseInfo(
+                name = "Pterygium",
+                description = "A fleshy, triangular growth of conjunctival tissue that extends from the sclera " +
+                    "toward the cornea, associated with prolonged sun, wind and dust exposure. It is visible in " +
+                    "a normal external eye photo, but this model has not been trained to recognize it yet: it " +
+                    "is included here for reference only.",
+                symptoms = listOf("Visible fleshy growth on the eye", "Redness and irritation", "Foreign body sensation", "Blurred vision if it grows over the cornea"),
+                recommendation = "Wear UV-protective sunglasses; see an ophthalmologist if it grows or affects vision, it may require surgery."
+            )
+        ),
+        DiseaseInfo(
+            code = "PTOS",
+            isDetectableByModel = false,
+            es = LocalizedDiseaseInfo(
+                name = "Ptosis",
+                description = "Caída del párpado superior por debilidad del músculo o nervio que lo eleva, " +
+                    "congénita o adquirida con la edad. Es visible en una foto del ojo por fuera, pero este " +
+                    "modelo todavía no fue entrenado para reconocerla: se incluye aquí solo como información " +
+                    "de referencia.",
+                symptoms = listOf("Párpado superior caído", "Necesidad de inclinar la cabeza para ver bien", "Fatiga al mantener el ojo abierto", "Cejas levantadas por compensación"),
+                recommendation = "Consulte a un oftalmólogo: puede afectar la visión y, en casos marcados, corregirse con cirugía."
+            ),
+            en = LocalizedDiseaseInfo(
+                name = "Ptosis",
+                description = "Drooping of the upper eyelid due to weakness of the muscle or nerve that lifts " +
+                    "it, either congenital or acquired with age. It is visible in a normal external eye photo, " +
+                    "but this model has not been trained to recognize it yet: it is included here for " +
+                    "reference only.",
+                symptoms = listOf("Drooping upper eyelid", "Tilting the head back to see clearly", "Fatigue from keeping the eye open", "Raised eyebrows from compensation"),
+                recommendation = "See an ophthalmologist: it can affect vision and, in marked cases, be corrected with surgery."
+            )
+        ),
+        DiseaseInfo(
+            code = "DRY",
+            isDetectableByModel = false,
+            es = LocalizedDiseaseInfo(
+                name = "Ojo Seco",
+                description = "El síndrome de ojo seco ocurre cuando los ojos no producen suficientes lágrimas " +
+                    "o estas se evaporan demasiado rápido. Puede causar enrojecimiento visible en una foto " +
+                    "externa, pero este modelo todavía no fue entrenado para reconocerlo: se incluye aquí " +
+                    "solo como información de referencia.",
+                symptoms = listOf("Sensación de ardor o arenilla", "Enrojecimiento", "Visión borrosa intermitente", "Lagrimeo excesivo como respuesta refleja"),
+                recommendation = "Use lágrimas artificiales y descanse la vista frente a pantallas; consulte a un oftalmólogo si persiste."
+            ),
+            en = LocalizedDiseaseInfo(
+                name = "Dry Eye",
+                description = "Dry eye syndrome happens when the eyes don't produce enough tears or the tears " +
+                    "evaporate too quickly. It can cause visible redness in an external photo, but this model " +
+                    "has not been trained to recognize it yet: it is included here for reference only.",
+                symptoms = listOf("Burning or gritty sensation", "Redness", "Intermittent blurry vision", "Excessive tearing as a reflex response"),
+                recommendation = "Use artificial tears and rest your eyes from screens; see an ophthalmologist if it persists."
+            )
         )
     )
 

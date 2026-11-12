@@ -3,9 +3,11 @@ package com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // [Principio S - SRP] Unica responsabilidad de este archivo: declarar los tokens de color del
-// design system "OcuCheck AI" (paleta clinica, un solo esquema claro: la marca esta pensada para
-// consultorios/clinicas con buena iluminacion, no hay variante oscura definida en el spec). No
-// arma ColorScheme ni sabe donde se usa cada color; eso vive en Theme.kt.
+// design system "OcuCheck AI" (paleta clinica). La variante clara sigue siendo la pensada para
+// consultorios/clinicas con buena iluminacion; en v1.1 se agrega una variante oscura (mas abajo)
+// para uso personal fuera de ese contexto, donde la preferencia del usuario pesa mas que la
+// calma visual de un consultorio. No arma ColorScheme ni sabe donde se usa cada color; eso vive
+// en Theme.kt.
 val Surface = Color(0xFFF7F9FB)
 val SurfaceDim = Color(0xFFD8DADC)
 val SurfaceBright = Color(0xFFF7F9FB)
@@ -84,3 +86,24 @@ val ViewfinderScrim = Color(0xCC0F172A)
 val ViewfinderPositioning = Color(0xFF0284C7)
 val ViewfinderReady = Color(0xFF10B981)
 val ViewfinderAlert = Color(0xFFF59E0B)
+
+// Variante oscura (v1.1): reutiliza los roles "inverse"/"fixed" ya definidos arriba donde
+// encajan (son los mismos tonos que M3 usaria para un ColorScheme oscuro de esta paleta), y
+// agrega solo los que faltaban.
+val DarkBackground = Color(0xFF101416)
+val DarkOnBackground = Color(0xFFE2E5E6)
+val DarkSurface = Color(0xFF101416)
+val DarkSurfaceVariant = Color(0xFF3E494B)
+val DarkOnSurfaceVariant = Color(0xFFBDC8CB)
+val DarkSurfaceContainerLowest = Color(0xFF0B0E10)
+val DarkSurfaceContainerLow = Color(0xFF191C1E)
+val DarkSurfaceContainer = Color(0xFF1D2022)
+val DarkSurfaceContainerHigh = Color(0xFF282B2D)
+val DarkSurfaceContainerHighest = Color(0xFF333638)
+val DarkOutline = Color(0xFF889295)
+val DarkOutlineVariant = Color(0xFF3E494B)
+val DarkPrimaryContainer = Color(0xFF004F58)
+val DarkSecondaryContainer = Color(0xFF3C475A)
+val DarkTertiaryContainer = Color(0xFF004B73)
+val DarkErrorContainer = Color(0xFF93000A)
+val DarkOnErrorContainer = Color(0xFFFFDAD6)
