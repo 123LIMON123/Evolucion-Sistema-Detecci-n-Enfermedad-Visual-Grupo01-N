@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -187,7 +188,7 @@ private fun HomeHeroCard(welcome: String, subtitle: String, analysesLabel: Strin
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(18.dp)
                 )
-                Spacer(modifier = Modifier.padding(start = 6.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = analysesLabel,
                     style = MaterialTheme.typography.labelLarge,
@@ -222,7 +223,7 @@ private fun HomeMenuCard(item: HomeMenuItem, onClick: () -> Unit) {
             ) {
                 Icon(imageVector = item.icon, contentDescription = null, tint = item.accent)
             }
-            Spacer(modifier = Modifier.padding(start = 8.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = item.title, style = MaterialTheme.typography.titleMedium)
                 Text(
