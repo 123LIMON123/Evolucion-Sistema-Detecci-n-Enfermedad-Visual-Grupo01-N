@@ -74,13 +74,14 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
         ?: (uiState as? AuthUiState.Error)?.let { errorMessageFor(it.reason, strings) }
 
     fun attemptLogin() {
+        val trimmedEmail = email.trim()
         validationError = when {
-            email.isBlank() || password.isBlank() -> strings.errorRequiredFields
-            !isValidEmailFormat(email) -> strings.errorInvalidEmailFormat
+            trimmedEmail.isBlank() || password.isBlank() -> strings.errorRequiredFields
+            !isValidEmailFormat(trimmedEmail) -> strings.errorInvalidEmailFormat
             else -> null
         }
         if (validationError == null) {
-            viewModel.login(email, password) {
+            viewModel.login(trimmedEmail, password) {
                 navController.navigate("home") {
                     popUpTo("login") { inclusive = true }
                 }
@@ -172,6 +173,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     onValueChange = { email = it; validationError = null },
                     label = { Text(strings.emailLabel) },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
                     colors = OutlinedTextFieldDefaults.colors(
