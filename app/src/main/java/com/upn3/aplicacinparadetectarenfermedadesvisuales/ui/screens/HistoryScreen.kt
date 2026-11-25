@@ -27,6 +27,7 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepos
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.DiseaseCatalog
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppBottomNavBar
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.ClinicalStatusChip
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.label
@@ -55,7 +56,8 @@ fun HistoryScreen(
                 backContentDescription = strings.back,
                 onBack = { navController.popBackStack() }
             )
-        }
+        },
+        bottomBar = { AppBottomNavBar(navController) }
     ) { innerPadding ->
         if (history.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {

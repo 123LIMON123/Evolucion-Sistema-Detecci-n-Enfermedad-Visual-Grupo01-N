@@ -18,9 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -36,7 +34,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -45,6 +42,7 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AnalysisHistoryRe
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppBottomNavBar
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
 
 private data class HomeMenuItem(
@@ -77,7 +75,8 @@ fun HomeScreen(
                 onToggleLanguage = { localizationRepository.toggle() },
                 backContentDescription = strings.back
             )
-        }
+        },
+        bottomBar = { AppBottomNavBar(navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -97,6 +96,9 @@ fun HomeScreen(
             )
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Historial, Enfermedades y Perfil ahora viven en AppBottomNavBar (persistente en
+            // las 4 pantallas principales); aqui solo queda la accion principal y Ajustes, que no
+            // entra como 5ta pestaña sin apretar el diseño de la barra inferior.
             val items = listOf(
                 HomeMenuItem(
                     icon = Icons.Filled.Search,
@@ -104,27 +106,6 @@ fun HomeScreen(
                     description = strings.newAnalysisDescription,
                     accent = MaterialTheme.colorScheme.primary,
                     route = "camera"
-                ),
-                HomeMenuItem(
-                    icon = Icons.Filled.DateRange,
-                    title = strings.historyNav,
-                    description = strings.historyDescription,
-                    accent = MaterialTheme.colorScheme.secondary,
-                    route = "history"
-                ),
-                HomeMenuItem(
-                    icon = Icons.Filled.Info,
-                    title = strings.diseaseInfoNav,
-                    description = strings.diseaseInfoDescription,
-                    accent = MaterialTheme.colorScheme.tertiary,
-                    route = "disease_info"
-                ),
-                HomeMenuItem(
-                    icon = Icons.Filled.AccountCircle,
-                    title = strings.profileNav,
-                    description = strings.profileDescription,
-                    accent = MaterialTheme.colorScheme.primary,
-                    route = "profile"
                 ),
                 HomeMenuItem(
                     icon = Icons.Filled.Settings,
@@ -155,11 +136,7 @@ private fun HomeHeroCard(welcome: String, subtitle: String, analysesLabel: Strin
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.extraLarge)
-            .background(
-                Brush.linearGradient(
-                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                )
-            )
+            .background(MaterialTheme.colorScheme.primary)
             .padding(20.dp)
     ) {
         Column {

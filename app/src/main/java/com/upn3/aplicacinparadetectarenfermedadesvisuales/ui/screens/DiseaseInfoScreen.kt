@@ -24,6 +24,7 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepos
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.DiseaseCatalog
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppBottomNavBar
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.ClinicalStatusChip
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.theme.ClinicalTier
@@ -46,7 +47,8 @@ fun DiseaseInfoScreen(navController: NavController, localizationRepository: Loca
                 backContentDescription = strings.back,
                 onBack = { navController.popBackStack() }
             )
-        }
+        },
+        bottomBar = { AppBottomNavBar(navController) }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(innerPadding).padding(16.dp),
