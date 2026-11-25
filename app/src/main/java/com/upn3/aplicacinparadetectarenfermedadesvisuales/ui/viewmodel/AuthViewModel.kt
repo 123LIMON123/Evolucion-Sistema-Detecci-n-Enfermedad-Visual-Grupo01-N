@@ -75,6 +75,22 @@ class AuthViewModel(
         }
     }
 
+    fun signInWithGoogle(idToken: String, onSuccess: () -> Unit) {
+        _uiState.value = AuthUiState.Loading
+        viewModelScope.launch {
+            when (val result = authRepository.signInWithGoogleIdToken(idToken)) {
+                is AuthResult.Success -> {
+                    userSessionRepository.login(result.profile)
+                    _uiState.value = AuthUiState.Idle
+                    onSuccess()
+                }
+                is AuthResult.Failure -> {
+                    _uiState.value = AuthUiState.Error(result.reason)
+                }
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.value = AuthUiState.Idle
     }

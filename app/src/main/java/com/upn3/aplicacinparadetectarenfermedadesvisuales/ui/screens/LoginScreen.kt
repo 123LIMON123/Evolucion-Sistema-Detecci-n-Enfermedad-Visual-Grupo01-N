@@ -1,9 +1,13 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens
 
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,8 +21,10 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -34,12 +40,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.R
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthFailureReason
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
@@ -63,6 +74,7 @@ private fun errorMessageFor(reason: AuthFailureReason, strings: AppStrings): Str
 @Composable
 fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     val strings = LocalAppStrings.current
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
     var email by remember { mutableStateOf("") }
@@ -73,6 +85,37 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     val errorMessage = validationError
         ?: (uiState as? AuthUiState.Error)?.let { errorMessageFor(it.reason, strings) }
 
+    fun goHome() {
+        navController.navigate("home") {
+            popUpTo("login") { inclusive = true }
+        }
+    }
+
+    // El web client ID lo genera el plugin de google-services a partir de google-services.json
+    // (necesita que el proyecto de Firebase tenga habilitado Google como proveedor de acceso, ya
+    // configurado en el proyecto "OcucheckAi").
+    val googleSignInClient = remember(context) {
+        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, options)
+    }
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { activityResult ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(activityResult.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account.idToken
+            if (idToken != null) {
+                viewModel.signInWithGoogle(idToken) { goHome() }
+            }
+        } catch (e: ApiException) {
+            Log.e("LoginScreen", "Google Sign-In fallo: ${e.statusCode}", e)
+        }
+    }
+
     fun attemptLogin() {
         val trimmedEmail = email.trim()
         validationError = when {
@@ -81,11 +124,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             else -> null
         }
         if (validationError == null) {
-            viewModel.login(trimmedEmail, password) {
-                navController.navigate("home") {
-                    popUpTo("login") { inclusive = true }
-                }
-            }
+            viewModel.login(trimmedEmail, password) { goHome() }
         }
     }
 
@@ -154,19 +193,6 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     .padding(horizontal = 28.dp, vertical = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Surface(
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f)
-                ) {
-                    Text(
-                        text = strings.demoAccountHint,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedTextField(
                     value = email,
@@ -228,6 +254,30 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                         Text(text = strings.loginButton, style = MaterialTheme.typography.titleMedium)
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    HorizontalDivider(modifier = Modifier.weight(1f))
+                    Text(
+                        text = strings.orDividerLabel,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                    HorizontalDivider(modifier = Modifier.weight(1f))
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = {
+                        viewModel.clearError()
+                        googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                    },
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text(text = strings.googleSignInAction)
+                }
+
                 Spacer(modifier = Modifier.height(4.dp))
                 TextButton(onClick = {
                     viewModel.clearError()

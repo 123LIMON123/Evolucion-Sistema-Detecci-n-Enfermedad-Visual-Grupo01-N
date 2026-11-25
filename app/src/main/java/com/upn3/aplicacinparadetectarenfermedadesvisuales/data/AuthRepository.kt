@@ -29,9 +29,11 @@ sealed interface PasswordChangeResult {
  * tocar el ViewModel ni las pantallas de Login/Register.
  */
 interface AuthRepository {
-    fun register(name: String, email: String, password: String): AuthResult
-    fun login(email: String, password: String): AuthResult
-    fun changePassword(email: String, currentPassword: String, newPassword: String): PasswordChangeResult
+    suspend fun register(name: String, email: String, password: String): AuthResult
+    suspend fun login(email: String, password: String): AuthResult
+    /** Inicia sesion con la credencial de Google (el ID token que entrega el flujo de Google Sign-In). */
+    suspend fun signInWithGoogleIdToken(idToken: String): AuthResult
+    suspend fun changePassword(email: String, currentPassword: String, newPassword: String): PasswordChangeResult
 }
 
 /**
@@ -50,7 +52,7 @@ class InMemoryAuthRepository : AuthRepository {
         DEMO_EMAIL to Account(name = "Usuario Demo", email = DEMO_EMAIL, password = DEMO_PASSWORD)
     )
 
-    override fun register(name: String, email: String, password: String): AuthResult {
+    override suspend fun register(name: String, email: String, password: String): AuthResult {
         val normalizedEmail = email.trim().lowercase()
         if (name.isBlank() || normalizedEmail.isBlank() || password.length < MIN_PASSWORD_LENGTH) {
             return AuthResult.Failure(AuthFailureReason.INVALID_INPUT)
@@ -62,7 +64,7 @@ class InMemoryAuthRepository : AuthRepository {
         return AuthResult.Success(UserProfile(name = name.trim(), email = normalizedEmail))
     }
 
-    override fun login(email: String, password: String): AuthResult {
+    override suspend fun login(email: String, password: String): AuthResult {
         val normalizedEmail = email.trim().lowercase()
         val account = accountsByEmail[normalizedEmail]
         return if (account != null && account.password == password) {
@@ -72,7 +74,12 @@ class InMemoryAuthRepository : AuthRepository {
         }
     }
 
-    override fun changePassword(
+    // No hay flujo de Google Sign-In sin un backend real detras: esta implementacion en memoria
+    // es solo para pruebas/demo, asi que siempre rechaza.
+    override suspend fun signInWithGoogleIdToken(idToken: String): AuthResult =
+        AuthResult.Failure(AuthFailureReason.INVALID_CREDENTIALS)
+
+    override suspend fun changePassword(
         email: String,
         currentPassword: String,
         newPassword: String
@@ -92,6 +99,8 @@ class InMemoryAuthRepository : AuthRepository {
     companion object {
         const val DEMO_EMAIL = "demo@ocucheck.ai"
         const val DEMO_PASSWORD = "demo1234"
-        private const val MIN_PASSWORD_LENGTH = 4
+        // Alineado al minimo real que exige Firebase Auth (rechaza contraseñas de menos de 6
+        // caracteres), para que la validacion del formulario y la del backend coincidan.
+        private const val MIN_PASSWORD_LENGTH = 6
     }
 }

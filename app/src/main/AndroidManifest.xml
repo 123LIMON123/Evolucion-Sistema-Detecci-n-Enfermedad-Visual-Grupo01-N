@@ -6,6 +6,10 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- Recordatorios periodicos de chequeo (Settings). Requerido desde Android 13 (API 33). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- v1.2: Firebase Authentication/Firestore necesitan red real (antes la app era 100%
+         offline; el analisis con el modelo TFLite sigue corriendo en el dispositivo). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".EyeDiseaseApp"

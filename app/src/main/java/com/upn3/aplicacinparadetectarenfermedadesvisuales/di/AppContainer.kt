@@ -3,12 +3,14 @@ package com.upn3.aplicacinparadetectarenfermedadesvisuales.di
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.DataStoreOnboardingRepository
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.DataStoreUserSessionRepository
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryAnalysisHistoryRepository
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryAuthRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.FirebaseAuthRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.FirebaseUserSessionRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.FirestoreAnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.InMemoryLocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.OnboardingRepository
@@ -31,14 +33,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
-// El unico lugar que liga el DataStore de sesion a un Context de Android. El repositorio en si
-// (DataStoreUserSessionRepository) recibe el DataStore ya construido, no el Context, para poder
-// probarse con un DataStore de archivo temporal sin depender de Android.
-private val Context.sessionDataStore by preferencesDataStore(name = "user_session")
-
-// DataStore separado para el estado del onboarding: Jetpack DataStore trata cada nombre de
-// archivo de preferencias como un singleton por Context, asi que una preferencia nueva que no
-// tiene nada que ver con la sesion va en su propio archivo en vez de reutilizar sessionDataStore.
+// DataStore para el estado del onboarding (la sesion ahora la maneja FirebaseAuth, ver
+// FirebaseUserSessionRepository, asi que ya no hace falta un DataStore propio para eso).
 private val Context.onboardingDataStore by preferencesDataStore(name = "onboarding")
 
 // DataStore para la preferencia de tema (modo oscuro), igual criterio que onboardingDataStore:
@@ -100,17 +96,33 @@ class AppContainer(context: Context) {
     // sin tocar FrameQualityAnalyzer.
     val frameQualityAnalyzer: FrameQualityAnalyzer = FrameQualityAnalyzer()
 
-    val historyRepository: AnalysisHistoryRepository = InMemoryAnalysisHistoryRepository()
+    // Firebase Authentication + Firestore (proyecto "OcucheckAi") reemplazan las versiones en
+    // memoria/DataStore en este unico lugar: ninguna pantalla ni ViewModel se entera del cambio
+    // porque todas dependen de las interfaces (AuthRepository, UserSessionRepository,
+    // AnalysisHistoryRepository), nunca de estas clases concretas.
+    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
-    // [Principio D - DIP] DataStoreUserSessionRepository reemplazo a InMemoryUserSessionRepository
-    // en este unico lugar para que la sesion sobreviva a cerrar la app; ninguna pantalla ni el
-    // AuthViewModel se enteraron del cambio porque dependen de la interfaz UserSessionRepository.
-    val userSessionRepository: UserSessionRepository = DataStoreUserSessionRepository(
-        dataStore = context.applicationContext.sessionDataStore,
+    val historyRepository: AnalysisHistoryRepository = FirestoreAnalysisHistoryRepository(
+        firestore = firestore,
+        firebaseAuth = firebaseAuth,
         externalScope = appScope
     )
 
-    val authRepository: AuthRepository = InMemoryAuthRepository()
+    // [Principio D - DIP] FirebaseUserSessionRepository reemplazo a DataStoreUserSessionRepository
+    // en este unico lugar para que la sesion viva en la cuenta real de Firebase (sobrevive a
+    // cerrar la app y se comparte entre dispositivos); ninguna pantalla ni el AuthViewModel se
+    // enteraron del cambio porque dependen de la interfaz UserSessionRepository.
+    val userSessionRepository: UserSessionRepository = FirebaseUserSessionRepository(
+        firebaseAuth = firebaseAuth,
+        firestore = firestore,
+        externalScope = appScope
+    )
+
+    val authRepository: AuthRepository = FirebaseAuthRepository(
+        firebaseAuth = firebaseAuth,
+        firestore = firestore
+    )
 
     val localizationRepository: LocalizationRepository = InMemoryLocalizationRepository()
 
