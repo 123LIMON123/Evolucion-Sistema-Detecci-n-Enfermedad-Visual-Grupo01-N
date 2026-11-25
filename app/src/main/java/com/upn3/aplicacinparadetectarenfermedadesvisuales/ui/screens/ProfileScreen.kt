@@ -50,6 +50,7 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.RiskLevel
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppBottomNavBar
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
 
 /**
@@ -86,7 +87,8 @@ fun ProfileScreen(
                 backContentDescription = strings.back,
                 onBack = { navController.popBackStack() }
             )
-        }
+        },
+        bottomBar = { AppBottomNavBar(navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
