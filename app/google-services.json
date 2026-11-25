@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "294633429131",
+    "project_id": "ocucheckai-6464b",
+    "storage_bucket": "ocucheckai-6464b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:294633429131:android:d223f96f19c9cb0cea5c8e",
+        "android_client_info": {
+          "package_name": "com.upn3.aplicacinparadetectarenfermedadesvisuales"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "294633429131-8brbf6quhqafghnq2fiivpu9b73k16f3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0RgN4lvjOq_qPgvvM-Na_WTNkXGOYx9Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "294633429131-8brbf6quhqafghnq2fiivpu9b73k16f3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

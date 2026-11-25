@@ -44,6 +44,15 @@ android {
     androidResources {
         noCompress += "tflite"
     }
+
+    testOptions {
+        unitTests {
+            // Los repositorios logean con android.util.Log.e en sus catch de IOException; sin
+            // esto, un test JVM plano (sin Robolectric) explota con "Method e in android.util.Log
+            // not mocked" en vez de dejar correr el catch normalmente.
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 dependencies {
