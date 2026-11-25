@@ -40,18 +40,44 @@ class CameraAnalysisViewModel(
     private val _frameQuality = MutableStateFlow(FrameQuality.POSITIONING)
     val frameQuality: StateFlow<FrameQuality> = _frameQuality.asStateFlow()
 
+    // Cuantos frames BUENOS seguidos van (se resetea a 0 apenas un frame no es bueno): exigir
+    // varios seguidos, en vez de disparar con el primer frame bueno, es lo que evita que un
+    // parpadeo o un movimiento breve dispare un analisis sobre un encuadre que en realidad no
+    // se sostuvo quieto.
+    private var consecutiveGoodFrames = 0
+
+    private val _captureProgress = MutableStateFlow(0f)
+    /** 0f..1f: que tan cerca esta de completar los frames buenos seguidos que hacen falta para capturar. */
+    val captureProgress: StateFlow<Float> = _captureProgress.asStateFlow()
+
+    // Una vez que se alcanza REQUIRED_GOOD_FRAMES se "congela" la captura (no se vuelve a
+    // analizar en cada frame siguiente): el usuario debe pedir explicitamente un nuevo analisis
+    // (resetToIdle) para volver a habilitar la deteccion en vivo.
+    private val _isCaptureLocked = MutableStateFlow(false)
+    val isCaptureLocked: StateFlow<Boolean> = _isCaptureLocked.asStateFlow()
+
     /**
      * Se llama en cada frame en vivo muestreado por la camara: primero evalua encuadre/luz/
-     * nitidez, y solo dispara el analisis de enfermedad cuando el frame es lo bastante bueno
-     * (evita correr inferencia -y mostrar un resultado potencialmente erroneo- sobre una imagen
-     * oscura, con glare o borrosa).
+     * nitidez. Si el encuadre es bueno varios frames seguidos (el usuario sostuvo la posicion
+     * quieta), recien ahi se dispara el analisis una sola vez y se bloquea hasta el proximo
+     * reset; si el encuadre deja de ser bueno en cualquier momento, el conteo se reinicia sin
+     * disparar nada (no "jala" un resultado de un encuadre que no se sostuvo).
      */
     fun onFrameCaptured(bitmap: Bitmap, rotationDegrees: Int = 0) {
+        if (_isCaptureLocked.value) return
         viewModelScope.launch(Dispatchers.Default) {
             val quality = frameQualityAnalyzer.analyze(bitmap)
             _frameQuality.value = quality
             if (quality == FrameQuality.GOOD) {
-                analyze(bitmap, rotationDegrees)
+                consecutiveGoodFrames = (consecutiveGoodFrames + 1).coerceAtMost(REQUIRED_GOOD_FRAMES)
+                _captureProgress.value = consecutiveGoodFrames / REQUIRED_GOOD_FRAMES.toFloat()
+                if (consecutiveGoodFrames >= REQUIRED_GOOD_FRAMES) {
+                    _isCaptureLocked.value = true
+                    analyze(bitmap, rotationDegrees)
+                }
+            } else {
+                consecutiveGoodFrames = 0
+                _captureProgress.value = 0f
             }
         }
     }
@@ -74,9 +100,17 @@ class CameraAnalysisViewModel(
     fun resetToIdle() {
         _uiState.value = AnalysisUiState.Idle
         _frameQuality.value = FrameQuality.POSITIONING
+        _captureProgress.value = 0f
+        _isCaptureLocked.value = false
+        consecutiveGoodFrames = 0
     }
 
     override fun onCleared() {
         classifier.close()
+    }
+
+    private companion object {
+        /** A ~1 frame/seg muestreado (ver CameraPreview), 3 equivale a ~3 segundos sostenidos. */
+        const val REQUIRED_GOOD_FRAMES = 3
     }
 }

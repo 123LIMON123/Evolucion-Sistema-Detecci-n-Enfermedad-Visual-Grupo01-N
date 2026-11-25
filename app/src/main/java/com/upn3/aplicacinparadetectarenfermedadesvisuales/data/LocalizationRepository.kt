@@ -1,6 +1,7 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.data
 
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppLanguage
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.next
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +35,6 @@ class InMemoryLocalizationRepository(initialLanguage: AppLanguage = AppLanguage.
     }
 
     override fun toggle() {
-        _language.value = if (_language.value == AppLanguage.ES) AppLanguage.EN else AppLanguage.ES
+        _language.value = _language.value.next()
     }
 }

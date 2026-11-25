@@ -40,8 +40,9 @@ import androidx.navigation.NavController
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.ReminderRepository
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.next
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.shortCode
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.reminders.ReminderScheduler
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
@@ -122,7 +123,7 @@ fun SettingsScreen(
                     label = strings.settingsLanguageCurrentValue,
                     action = {
                         TextButton(onClick = { localizationRepository.toggle() }) {
-                            Text(if (language == AppLanguage.ES) "ES → EN" else "EN → ES")
+                            Text("${language.shortCode()} → ${language.next().shortCode()}")
                         }
                     }
                 )

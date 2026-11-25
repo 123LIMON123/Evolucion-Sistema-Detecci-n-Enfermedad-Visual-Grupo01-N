@@ -43,6 +43,10 @@ object DiseaseCatalog {
         fun localized(language: AppLanguage): LocalizedDiseaseInfo = when (language) {
             AppLanguage.ES -> es
             AppLanguage.EN -> en
+            // El quechua todavia no tiene su propio texto clinico aqui (ver AppStrings.kt para
+            // el resto de la UI, que si esta traducida): se usa castellano para no arriesgar una
+            // traduccion medica imprecisa de terminos como "retinopatia" o "degeneracion macular".
+            AppLanguage.QU -> es
         }
     }
 

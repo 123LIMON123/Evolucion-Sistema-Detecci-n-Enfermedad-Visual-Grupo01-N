@@ -93,6 +93,8 @@ fun CameraScreen(
     val haptic = LocalHapticFeedback.current
     val uiState by viewModel.uiState.collectAsState()
     val frameQuality by viewModel.frameQuality.collectAsState()
+    val captureProgress by viewModel.captureProgress.collectAsState()
+    val isCaptureLocked by viewModel.isCaptureLocked.collectAsState()
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -167,7 +169,7 @@ fun CameraScreen(
         FrameQuality.TOO_DARK -> strings.qualityTooDark
         FrameQuality.TOO_BRIGHT -> strings.qualityTooBright
         FrameQuality.BLURRY -> strings.qualityBlurry
-        FrameQuality.GOOD -> strings.qualityGood
+        FrameQuality.GOOD -> if (isCaptureLocked) strings.qualityGood else strings.qualityHoldSteady
     }
 
     Scaffold(
@@ -187,6 +189,7 @@ fun CameraScreen(
                     uploadedImage = uploadedImage,
                     ringColor = ringColor,
                     qualityHint = qualityHint,
+                    captureProgress = if (frameQuality == FrameQuality.GOOD && !isCaptureLocked) captureProgress else 0f,
                     showDisclaimer = showDisclaimer,
                     disclaimerText = strings.disclaimerText,
                     disclaimerDismissLabel = strings.disclaimerDismiss,
@@ -202,8 +205,13 @@ fun CameraScreen(
                     language = language,
                     strings = strings,
                     hasUploadedImage = uploadedImage != null,
+                    showScanAgainAction = isCaptureLocked && uploadedImage == null,
                     onViewDetail = { goToResultDetail() },
                     onPickPhoto = { gallerySelector.launch("image/*") },
+                    onScanAgain = {
+                        lastSuccess = null
+                        viewModel.resetToIdle()
+                    },
                     onBackToLiveCamera = {
                         uploadedImage = null
                         lastSuccess = null
@@ -235,6 +243,7 @@ private fun CameraViewfinderSection(
     uploadedImage: Bitmap?,
     ringColor: Color,
     qualityHint: String,
+    captureProgress: Float,
     showDisclaimer: Boolean,
     disclaimerText: String,
     disclaimerDismissLabel: String,
@@ -253,6 +262,16 @@ private fun CameraViewfinderSection(
         } else {
             CameraPreview(onFrameCaptured = onFrameCaptured)
             ViewfinderOverlay(ringColor = ringColor, modifier = Modifier.fillMaxSize())
+
+            if (captureProgress > 0f) {
+                CircularProgressIndicator(
+                    progress = { captureProgress },
+                    modifier = Modifier.align(Alignment.Center).size(100.dp),
+                    color = ViewfinderReady,
+                    strokeWidth = 4.dp,
+                    trackColor = ViewfinderReady.copy(alpha = 0.25f)
+                )
+            }
 
             Text(
                 text = qualityHint,
@@ -293,8 +312,10 @@ private fun CameraResultsPanel(
     language: AppLanguage,
     strings: AppStrings,
     hasUploadedImage: Boolean,
+    showScanAgainAction: Boolean,
     onViewDetail: () -> Unit,
     onPickPhoto: () -> Unit,
+    onScanAgain: () -> Unit,
     onBackToLiveCamera: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -350,6 +371,15 @@ private fun CameraResultsPanel(
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Text(strings.viewDetail)
+                }
+                if (showScanAgainAction) {
+                    OutlinedButton(
+                        onClick = onScanAgain,
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Text(strings.newAnalysisAction)
+                    }
                 }
             }
             errorMessage != null -> {

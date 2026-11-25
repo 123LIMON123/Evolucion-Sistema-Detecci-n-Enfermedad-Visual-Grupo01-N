@@ -18,6 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppLanguage
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.next
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.shortCode
 
 /**
  * [Principio S - SRP] Unica responsabilidad: renderizar la barra superior compartida por todas
@@ -44,7 +46,7 @@ fun AppTopBar(
         },
         actions = {
             Text(
-                text = if (language == AppLanguage.ES) "EN" else "ES",
+                text = language.next().shortCode(),
                 color = MaterialTheme.colorScheme.onPrimary,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
