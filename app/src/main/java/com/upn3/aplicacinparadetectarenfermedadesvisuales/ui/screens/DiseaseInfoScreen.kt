@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,6 +78,15 @@ fun DiseaseInfoScreen(navController: NavController, localizationRepository: Loca
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = strings.recommendationLabel, style = MaterialTheme.typography.titleSmall)
                         Text(text = info.recommendation, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+                        if (disease.selfTest != null) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            OutlinedButton(
+                                onClick = { navController.navigate("self_test/${disease.code}") },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(strings.selfTestAction)
+                            }
+                        }
                     }
                 }
             }

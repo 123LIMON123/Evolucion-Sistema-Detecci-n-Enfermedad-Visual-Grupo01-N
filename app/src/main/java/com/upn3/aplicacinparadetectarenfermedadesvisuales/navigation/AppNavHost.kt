@@ -27,6 +27,7 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.OnboardingS
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.ProfileScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.RegisterScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.SettingsScreen
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens.selftest.SelfTestScreen
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.AuthViewModel
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.CameraAnalysisViewModel
 
@@ -91,6 +92,10 @@ fun AppNavHost(navController: NavHostController, appContainer: AppContainer) {
             AnalysisResultScreen(navController, diseaseCode, confidence, riskLevel, appContainer.localizationRepository)
         }
         composable("disease_info") { DiseaseInfoScreen(navController, appContainer.localizationRepository) }
+        composable("self_test/{diseaseCode}") { backStackEntry ->
+            val diseaseCode = backStackEntry.arguments?.getString("diseaseCode") ?: ""
+            SelfTestScreen(navController, appContainer.localizationRepository, diseaseCode)
+        }
         composable("history") {
             HistoryScreen(navController, appContainer.historyRepository, appContainer.localizationRepository)
         }

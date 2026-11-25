@@ -33,7 +33,12 @@ object DiseaseCatalog {
         // cualquier foto del ojo, ni externa ni de fondo): ninguna se puede detectar con este
         // modelo sin importar cuantos datos se sumen. Se dejan como contenido informativo; ver
         // ml/EXTERNAL_DATASETS.md para el detalle de esta decision.
-        val isDetectableByModel: Boolean = true
+        val isDetectableByModel: Boolean = true,
+        // Autotest casero de cribado para las condiciones que el modelo no puede ver (ver
+        // SelfTestType). null = no hay un autotest conocido y relevante para esta condicion (p.ej.
+        // N/C/CONJ ya se evaluan con la camara; PTER/PTOS/O son visibles pero sin un test
+        // estandarizado que aplicar).
+        val selfTest: SelfTestType? = null
     ) {
         fun localized(language: AppLanguage): LocalizedDiseaseInfo = when (language) {
             AppLanguage.ES -> es
@@ -60,6 +65,7 @@ object DiseaseCatalog {
         DiseaseInfo(
             code = "D",
             isDetectableByModel = false,
+            selfTest = SelfTestType.NO_RELIABLE_SELF_TEST,
             es = LocalizedDiseaseInfo(
                 name = "Diabetes",
                 description = "La retinopatia diabetica es una complicacion de la diabetes que afecta los ojos. " +
@@ -83,6 +89,7 @@ object DiseaseCatalog {
         DiseaseInfo(
             code = "G",
             isDetectableByModel = false,
+            selfTest = SelfTestType.NO_RELIABLE_SELF_TEST,
             es = LocalizedDiseaseInfo(
                 name = "Glaucoma",
                 description = "Grupo de condiciones oculares que danan el nervio optico, a menudo por presion " +
@@ -124,6 +131,7 @@ object DiseaseCatalog {
         DiseaseInfo(
             code = "A",
             isDetectableByModel = false,
+            selfTest = SelfTestType.AMSLER_GRID,
             es = LocalizedDiseaseInfo(
                 name = "Degeneración Macular",
                 description = "La degeneracion macular relacionada con la edad afecta la vision central " +
@@ -145,6 +153,7 @@ object DiseaseCatalog {
         DiseaseInfo(
             code = "H",
             isDetectableByModel = false,
+            selfTest = SelfTestType.NO_RELIABLE_SELF_TEST,
             es = LocalizedDiseaseInfo(
                 name = "Hipertensión",
                 description = "La hipertension puede danar los vasos sanguineos de la retina. Ese dano solo es " +
@@ -165,6 +174,7 @@ object DiseaseCatalog {
         DiseaseInfo(
             code = "M",
             isDetectableByModel = false,
+            selfTest = SelfTestType.VISUAL_ACUITY,
             es = LocalizedDiseaseInfo(
                 name = "Miopía",
                 description = "La miopia patologica puede causar cambios degenerativos en el fondo de ojo, pero " +
@@ -225,6 +235,7 @@ object DiseaseCatalog {
         DiseaseInfo(
             code = "AST",
             isDetectableByModel = false,
+            selfTest = SelfTestType.ASTIGMATISM_FAN,
             es = LocalizedDiseaseInfo(
                 name = "Astigmatismo",
                 description = "Error refractivo causado por una curvatura irregular de la cornea o el cristalino. " +
@@ -294,6 +305,7 @@ object DiseaseCatalog {
         DiseaseInfo(
             code = "DRY",
             isDetectableByModel = false,
+            selfTest = SelfTestType.DRY_EYE_QUESTIONNAIRE,
             es = LocalizedDiseaseInfo(
                 name = "Ojo Seco",
                 description = "El síndrome de ojo seco ocurre cuando los ojos no producen suficientes lágrimas " +
