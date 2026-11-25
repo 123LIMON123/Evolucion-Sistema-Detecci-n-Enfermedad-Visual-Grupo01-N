@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -86,6 +87,18 @@ dependencies {
 
     // WorkManager (recordatorio periodico de chequeo)
     implementation(libs.androidx.work.runtime.ktx)
+
+    // Firebase (Authentication + Firestore) y Google Sign-In
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.play.services.auth)
+    implementation(libs.kotlinx.coroutines.play.services)
+    // Firebase/Play Services traen Guava "completo", que choca en tiempo de compilacion con el
+    // listenablefuture-solo-la-interfaz que espera CameraX (ver CameraPreview.kt). Guava publica
+    // su propio listenablefuture "vacio para evitar el choque", asi que forzar una version de
+    // Guava resuelve el conflicto sin tocar nada de CameraX.
+    implementation("com.google.guava:guava:33.3.1-android")
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

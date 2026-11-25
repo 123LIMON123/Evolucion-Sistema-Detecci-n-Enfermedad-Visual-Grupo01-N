@@ -32,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +52,7 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
+import kotlinx.coroutines.launch
 
 /**
  * [Principio S - SRP] Unica responsabilidad: mostrar y editar los datos del usuario en sesion,
@@ -257,6 +259,7 @@ private fun ChangePasswordDialog(
     var newPassword by remember { mutableStateOf("") }
     var confirmNewPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -301,12 +304,14 @@ private fun ChangePasswordDialog(
                     errorMessage = strings.errorNewPasswordMismatch
                     return@TextButton
                 }
-                when (val result = authRepository.changePassword(userEmail, currentPassword, newPassword)) {
-                    is PasswordChangeResult.Success -> onDismiss()
-                    is PasswordChangeResult.Failure -> {
-                        errorMessage = when (result.reason) {
-                            PasswordChangeFailureReason.WRONG_CURRENT_PASSWORD -> strings.errorWrongCurrentPassword
-                            PasswordChangeFailureReason.NEW_PASSWORD_TOO_SHORT -> strings.errorNewPasswordTooShort
+                coroutineScope.launch {
+                    when (val result = authRepository.changePassword(userEmail, currentPassword, newPassword)) {
+                        is PasswordChangeResult.Success -> onDismiss()
+                        is PasswordChangeResult.Failure -> {
+                            errorMessage = when (result.reason) {
+                                PasswordChangeFailureReason.WRONG_CURRENT_PASSWORD -> strings.errorWrongCurrentPassword
+                                PasswordChangeFailureReason.NEW_PASSWORD_TOO_SHORT -> strings.errorNewPasswordTooShort
+                            }
                         }
                     }
                 }

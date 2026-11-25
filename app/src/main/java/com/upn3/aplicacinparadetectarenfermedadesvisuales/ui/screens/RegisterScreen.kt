@@ -78,7 +78,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank() ->
                 strings.errorRequiredFields
             !isValidEmailFormat(email) -> strings.errorInvalidEmailFormat
-            password.length < 4 -> strings.errorPasswordTooShort
+            password.length < 6 -> strings.errorPasswordTooShort
             password != confirmPassword -> strings.errorPasswordMismatch
             else -> null
         }

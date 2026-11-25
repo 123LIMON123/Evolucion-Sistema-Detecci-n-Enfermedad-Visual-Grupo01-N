@@ -34,13 +34,16 @@ private class FakeAuthRepository : AuthRepository {
     var registerResult: AuthResult = AuthResult.Failure(AuthFailureReason.INVALID_INPUT)
     var lastLoginEmail: String? = null
 
-    override fun register(name: String, email: String, password: String): AuthResult = registerResult
-    override fun login(email: String, password: String): AuthResult {
+    override suspend fun register(name: String, email: String, password: String): AuthResult = registerResult
+    override suspend fun login(email: String, password: String): AuthResult {
         lastLoginEmail = email
         return loginResult
     }
 
-    override fun changePassword(email: String, currentPassword: String, newPassword: String): PasswordChangeResult =
+    override suspend fun signInWithGoogleIdToken(idToken: String): AuthResult =
+        AuthResult.Failure(AuthFailureReason.INVALID_CREDENTIALS)
+
+    override suspend fun changePassword(email: String, currentPassword: String, newPassword: String): PasswordChangeResult =
         PasswordChangeResult.Failure(PasswordChangeFailureReason.WRONG_CURRENT_PASSWORD)
 }
 

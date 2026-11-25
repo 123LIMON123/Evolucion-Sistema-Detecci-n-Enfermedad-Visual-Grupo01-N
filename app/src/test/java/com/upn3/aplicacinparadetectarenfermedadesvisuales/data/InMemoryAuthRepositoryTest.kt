@@ -1,5 +1,6 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.data
 
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -15,25 +16,25 @@ class InMemoryAuthRepositoryTest {
     }
 
     @Test
-    fun `the seeded demo account can log in out of the box`() {
+    fun `the seeded demo account can log in out of the box`() = runTest {
         val result = repository.login(InMemoryAuthRepository.DEMO_EMAIL, InMemoryAuthRepository.DEMO_PASSWORD)
         assertTrue(result is AuthResult.Success)
     }
 
     @Test
-    fun `login fails with a wrong password`() {
+    fun `login fails with a wrong password`() = runTest {
         val result = repository.login(InMemoryAuthRepository.DEMO_EMAIL, "wrong-password")
         assertEquals(AuthFailureReason.INVALID_CREDENTIALS, (result as AuthResult.Failure).reason)
     }
 
     @Test
-    fun `login fails for an email that was never registered`() {
+    fun `login fails for an email that was never registered`() = runTest {
         val result = repository.login("nobody@example.com", "whatever123")
         assertEquals(AuthFailureReason.INVALID_CREDENTIALS, (result as AuthResult.Failure).reason)
     }
 
     @Test
-    fun `register then login with the same credentials succeeds`() {
+    fun `register then login with the same credentials succeeds`() = runTest {
         val register = repository.register("Ada Lovelace", "ada@example.com", "pass1234")
         assertTrue(register is AuthResult.Success)
 
@@ -43,33 +44,33 @@ class InMemoryAuthRepositoryTest {
     }
 
     @Test
-    fun `email matching is case and whitespace insensitive`() {
+    fun `email matching is case and whitespace insensitive`() = runTest {
         repository.register("Ada Lovelace", "  Ada@Example.com  ", "pass1234")
         val login = repository.login("ada@example.com", "pass1234")
         assertTrue(login is AuthResult.Success)
     }
 
     @Test
-    fun `registering an already-used email fails`() {
+    fun `registering an already-used email fails`() = runTest {
         repository.register("First", InMemoryAuthRepository.DEMO_EMAIL, "pass1234")
         val second = repository.register("Second", InMemoryAuthRepository.DEMO_EMAIL, "pass5678")
         assertEquals(AuthFailureReason.EMAIL_ALREADY_REGISTERED, (second as AuthResult.Failure).reason)
     }
 
     @Test
-    fun `registering with a blank name fails validation`() {
+    fun `registering with a blank name fails validation`() = runTest {
         val result = repository.register("   ", "someone@example.com", "pass1234")
         assertEquals(AuthFailureReason.INVALID_INPUT, (result as AuthResult.Failure).reason)
     }
 
     @Test
-    fun `registering with a short password fails validation`() {
+    fun `registering with a short password fails validation`() = runTest {
         val result = repository.register("Someone", "someone@example.com", "abc")
         assertEquals(AuthFailureReason.INVALID_INPUT, (result as AuthResult.Failure).reason)
     }
 
     @Test
-    fun `a failed registration does not consume the email`() {
+    fun `a failed registration does not consume the email`() = runTest {
         repository.register("", "retry@example.com", "pass1234")
         val retry = repository.register("Now With Name", "retry@example.com", "pass1234")
         assertTrue(retry is AuthResult.Success)
