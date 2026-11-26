@@ -62,10 +62,11 @@ class FirebaseAuthRepository(
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val result = firebaseAuth.signInWithCredential(credential).await()
             val user = result.user ?: return AuthResult.Failure(AuthFailureReason.INVALID_CREDENTIALS)
+            val isNewUser = result.additionalUserInfo?.isNewUser == true
             val name = user.displayName ?: ""
             val userEmail = user.email ?: ""
             saveUserDocument(user.uid, name, userEmail)
-            AuthResult.Success(UserProfile(name = name, email = userEmail))
+            AuthResult.Success(UserProfile(name = name, email = userEmail), isNewUser = isNewUser)
         } catch (e: Exception) {
             AuthResult.Failure(AuthFailureReason.INVALID_CREDENTIALS)
         }

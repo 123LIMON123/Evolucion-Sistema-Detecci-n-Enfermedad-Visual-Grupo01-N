@@ -75,20 +75,30 @@ class AuthViewModel(
         }
     }
 
-    fun signInWithGoogle(idToken: String, onSuccess: () -> Unit) {
+    /**
+     * [onSuccess] recibe `isNewUser` (la cuenta se acaba de crear con este login) para que la
+     * pantalla decida si pedir nombre/apellidos una unica vez o ir derecho a Home.
+     */
+    fun signInWithGoogle(idToken: String, onSuccess: (isNewUser: Boolean) -> Unit) {
         _uiState.value = AuthUiState.Loading
         viewModelScope.launch {
             when (val result = authRepository.signInWithGoogleIdToken(idToken)) {
                 is AuthResult.Success -> {
                     userSessionRepository.login(result.profile)
                     _uiState.value = AuthUiState.Idle
-                    onSuccess()
+                    onSuccess(result.isNewUser)
                 }
                 is AuthResult.Failure -> {
                     _uiState.value = AuthUiState.Error(result.reason)
                 }
             }
         }
+    }
+
+    /** Completa nombre/apellidos despues de un primer login con Google (ver [signInWithGoogle]). */
+    fun completeGoogleProfile(fullName: String) {
+        val currentEmail = userSessionRepository.currentUser.value.email
+        userSessionRepository.updateProfile(name = fullName, email = currentEmail)
     }
 
     fun clearError() {

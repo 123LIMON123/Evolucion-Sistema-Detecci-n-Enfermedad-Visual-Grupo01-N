@@ -52,6 +52,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.R
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthFailureReason
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.CompleteGoogleProfileDialog
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.viewmodel.AuthUiState
@@ -80,6 +81,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var validationError by remember { mutableStateOf<String?>(null) }
+    var showCompleteProfileDialog by remember { mutableStateOf(false) }
 
     val isLoading = uiState is AuthUiState.Loading
     val errorMessage = validationError
@@ -109,7 +111,9 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             val account = task.getResult(ApiException::class.java)
             val idToken = account.idToken
             if (idToken != null) {
-                viewModel.signInWithGoogle(idToken) { goHome() }
+                viewModel.signInWithGoogle(idToken) { isNewUser ->
+                    if (isNewUser) showCompleteProfileDialog = true else goHome()
+                }
             } else {
                 validationError = strings.errorGoogleSignInFailed
             }
@@ -290,5 +294,16 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 }
             }
         }
+    }
+
+    if (showCompleteProfileDialog) {
+        CompleteGoogleProfileDialog(
+            strings = strings,
+            onConfirm = { fullName ->
+                viewModel.completeGoogleProfile(fullName)
+                showCompleteProfileDialog = false
+                goHome()
+            }
+        )
     }
 }

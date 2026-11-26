@@ -7,7 +7,12 @@ enum class AuthFailureReason {
 }
 
 sealed interface AuthResult {
-    data class Success(val profile: UserProfile) : AuthResult
+    /**
+     * @param isNewUser `true` solo cuando la cuenta se acaba de crear en este mismo llamado (ej.
+     * primer login con Google). La pantalla lo usa para pedir nombre/apellidos una unica vez, en
+     * vez de interrumpir a alguien que ya tenia cuenta con un formulario de mas.
+     */
+    data class Success(val profile: UserProfile, val isNewUser: Boolean = false) : AuthResult
     data class Failure(val reason: AuthFailureReason) : AuthResult
 }
 
