@@ -22,35 +22,37 @@ val InverseSurface = Color(0xFF2D3133)
 val InverseOnSurface = Color(0xFFEFF1F3)
 val Outline = Color(0xFF6E797B)
 val OutlineVariant = Color(0xFFBDC8CB)
-val SurfaceTint = Color(0xFF059669)
+val SurfaceTint = Color(0xFF0E8CA6)
 
-// v1.2: paleta "verde clinico" (antes teal), alineada al mismo verde que ya usaba
-// ClinicalHealthy/ViewfinderReady para "todo bien" - ahora ese mismo verde es la marca.
-val Primary = Color(0xFF059669)
+// v1.2: paleta "teal -> indigo" tomada de verdad del degradado del logo (muestreo de pixeles
+// real: dominante #18A8C0/#18C0C0 en el aro/lupa, #001860/#180090 en la pupila). Primary es el
+// teal (oscurecido un poco para contraste de texto blanco encima), Tertiary es el indigo: el
+// degrade teal->indigo de HomeHeroCard/Login/Register queda igual que el del logo.
+val Primary = Color(0xFF0E8CA6)
 val OnPrimary = Color(0xFFFFFFFF)
-val PrimaryContainer = Color(0xFF0D9488)
-val OnPrimaryContainer = Color(0xFFECFDF5)
-val InversePrimary = Color(0xFF6EE7B7)
+val PrimaryContainer = Color(0xFF14A6BD)
+val OnPrimaryContainer = Color(0xFFECFDFF)
+val InversePrimary = Color(0xFF7DE0EC)
 
 val Secondary = Color(0xFF545F73)
 val OnSecondary = Color(0xFFFFFFFF)
 val SecondaryContainer = Color(0xFFD5E0F8)
 val OnSecondaryContainer = Color(0xFF586377)
 
-val Tertiary = Color(0xFF005E90)
+val Tertiary = Color(0xFF23267A)
 val OnTertiary = Color(0xFFFFFFFF)
-val TertiaryContainer = Color(0xFF0078B6)
-val OnTertiaryContainer = Color(0xFFF5F9FF)
+val TertiaryContainer = Color(0xFF2E3294)
+val OnTertiaryContainer = Color(0xFFF2F2FF)
 
 val AppError = Color(0xFFBA1A1A)
 val OnError = Color(0xFFFFFFFF)
 val ErrorContainer = Color(0xFFFFDAD6)
 val OnErrorContainer = Color(0xFF93000A)
 
-val PrimaryFixed = Color(0xFFA7F3D0)
-val PrimaryFixedDim = Color(0xFF6EE7B7)
-val OnPrimaryFixed = Color(0xFF002114)
-val OnPrimaryFixedVariant = Color(0xFF00573A)
+val PrimaryFixed = Color(0xFFA7EEF5)
+val PrimaryFixedDim = Color(0xFF6AD4E0)
+val OnPrimaryFixed = Color(0xFF001F24)
+val OnPrimaryFixedVariant = Color(0xFF00525F)
 
 val SecondaryFixed = Color(0xFFD8E3FB)
 val SecondaryFixedDim = Color(0xFFBCC7DE)
@@ -104,7 +106,7 @@ val DarkSurfaceContainerHigh = Color(0xFF282B2D)
 val DarkSurfaceContainerHighest = Color(0xFF333638)
 val DarkOutline = Color(0xFF889295)
 val DarkOutlineVariant = Color(0xFF3E494B)
-val DarkPrimaryContainer = Color(0xFF00573A)
+val DarkPrimaryContainer = Color(0xFF00525F)
 val DarkSecondaryContainer = Color(0xFF3C475A)
 val DarkTertiaryContainer = Color(0xFF004B73)
 val DarkErrorContainer = Color(0xFF93000A)

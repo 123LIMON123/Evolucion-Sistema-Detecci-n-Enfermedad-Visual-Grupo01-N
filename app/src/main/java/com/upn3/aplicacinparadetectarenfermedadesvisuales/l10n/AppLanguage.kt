@@ -28,3 +28,14 @@ fun AppLanguage.shortCode(): String = when (this) {
     AppLanguage.EN -> "EN"
     AppLanguage.QU -> "QU"
 }
+
+/**
+ * Nombre del idioma en si mismo (no depende de [AppStrings]/del idioma activo): se usa en el
+ * selector de Ajustes para que las 3 opciones queden siempre visibles, nunca escondidas detras
+ * de un ciclo de "siguiente idioma" que habia que tocar varias veces para notar que existian.
+ */
+fun AppLanguage.displayName(): String = when (this) {
+    AppLanguage.ES -> "Español"
+    AppLanguage.EN -> "English"
+    AppLanguage.QU -> "Runasimi (quechua)"
+}

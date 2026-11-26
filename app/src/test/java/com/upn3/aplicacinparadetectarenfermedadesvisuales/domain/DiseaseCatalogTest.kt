@@ -19,10 +19,16 @@ class DiseaseCatalogTest {
     private val modelLabelOrder = listOf("N", "C", "CONJ")
 
     // Codigos que siguen en el catalogo como informacion de referencia pero que el modelo de
-    // foto externa (N, C, CONJ) no puede detectar: D/G/A/H/M/O son hallazgos de fondo de ojo,
-    // AST es un error refractivo, y PTER/PTOS/DRY son condiciones externas visibles pero para
-    // las que el modelo todavia no fue entrenado (v1.1). Ver ml/EXTERNAL_DATASETS.md.
-    private val informationOnlyCodes = listOf("D", "G", "A", "H", "M", "O", "AST", "PTER", "PTOS", "DRY")
+    // foto externa (N, C, CONJ) no puede detectar: D/G/A/H/M son hallazgos de fondo de ojo,
+    // AST es un error refractivo, y PTER/DRY son condiciones externas visibles pero para las
+    // que el modelo todavia no fue entrenado (v1.1). Todos tienen algo accionable (autotest o
+    // prevencion real); ver ml/EXTERNAL_DATASETS.md.
+    private val informationOnlyCodes = listOf("D", "G", "A", "H", "M", "AST", "PTER", "DRY")
+
+    // "O" (Otra) y "PTOS" (Ptosis) se sacaron del catalogo: no son detectables, no tienen
+    // autotest, y su unica "recomendacion" era generica ("consulte a un oftalmologo"), sin nada
+    // especifico y accionable que el usuario pueda hacer en casa.
+    private val removedCodes = listOf("O", "PTOS")
 
     @Test
     fun `every label the model can output exists in the catalog`() {
@@ -92,6 +98,27 @@ class DiseaseCatalogTest {
                 disease!!.isDetectableByModel.not()
             )
             assertTrue("'$code' no deberia estar entre las salidas del modelo", code !in modelLabelOrder)
+        }
+    }
+
+    @Test
+    fun `every informational code has something actionable (self-test or prevention)`() {
+        informationOnlyCodes.forEach { code ->
+            val disease = DiseaseCatalog.byCode(code)!!
+            assertNotNull(
+                "'$code' no es detectable y no tiene selfTest: no deberia estar en el catalogo si no hay nada que hacer con esa info",
+                disease.selfTest
+            )
+        }
+    }
+
+    @Test
+    fun `codes with no detection, no self-test and no specific prevention were removed from the catalog`() {
+        removedCodes.forEach { code ->
+            assertNull(
+                "'$code' no deberia estar en el catalogo: no es detectable, no tiene autotest, y su recomendacion era generica",
+                DiseaseCatalog.byCode(code)
+            )
         }
     }
 }

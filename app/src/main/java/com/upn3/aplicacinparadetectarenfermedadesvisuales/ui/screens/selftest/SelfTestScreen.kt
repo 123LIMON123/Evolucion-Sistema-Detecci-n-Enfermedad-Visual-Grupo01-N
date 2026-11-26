@@ -21,7 +21,7 @@ fun SelfTestScreen(navController: NavController, localizationRepository: Localiz
         SelfTestType.AMSLER_GRID -> AmslerGridTestScreen(navController, localizationRepository)
         SelfTestType.ASTIGMATISM_FAN -> AstigmatismFanTestScreen(navController, localizationRepository)
         SelfTestType.DRY_EYE_QUESTIONNAIRE -> DryEyeQuestionnaireScreen(navController, localizationRepository)
-        SelfTestType.NO_RELIABLE_SELF_TEST, null ->
-            NoReliableSelfTestScreen(navController, localizationRepository, diseaseCode)
+        SelfTestType.PREVENTION_ONLY, null ->
+            PreventionScreen(navController, localizationRepository, diseaseCode)
     }
 }

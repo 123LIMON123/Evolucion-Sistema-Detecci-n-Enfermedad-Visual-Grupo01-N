@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.DiseaseCatalog
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.SelfTestType
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppBottomNavBar
@@ -86,7 +87,13 @@ fun DiseaseInfoScreen(navController: NavController, localizationRepository: Loca
                                 onClick = { navController.navigate("self_test/${disease.code}") },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(strings.selfTestAction)
+                                Text(
+                                    if (disease.selfTest == SelfTestType.PREVENTION_ONLY) {
+                                        strings.preventionAction
+                                    } else {
+                                        strings.selfTestAction
+                                    }
+                                )
                             }
                         }
                     }

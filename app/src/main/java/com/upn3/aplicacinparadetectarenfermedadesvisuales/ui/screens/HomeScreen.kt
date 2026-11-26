@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -40,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.domain.RiskLevel
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppBottomNavBar
@@ -96,6 +100,42 @@ fun HomeScreen(
             )
             Spacer(modifier = Modifier.height(20.dp))
 
+            if (history.isNotEmpty()) {
+                Text(
+                    text = strings.homeStatsSectionTitle,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    HomeStatTile(
+                        label = strings.profileStatsHighSuspicion,
+                        count = history.count { it.riskLevel == RiskLevel.SOSPECHA_ALTA },
+                        accent = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f)
+                    )
+                    HomeStatTile(
+                        label = strings.profileStatsModerate,
+                        count = history.count { it.riskLevel == RiskLevel.RIESGO_MODERADO },
+                        accent = Color(0xFFD97706),
+                        modifier = Modifier.weight(1f)
+                    )
+                    HomeStatTile(
+                        label = strings.profileStatsLow,
+                        count = history.count { it.riskLevel == RiskLevel.BAJO_RIESGO },
+                        accent = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            HomeTipCard(label = strings.homeTipLabel, tip = dailyTip(strings))
+            Spacer(modifier = Modifier.height(20.dp))
+
             // Historial, Enfermedades y Perfil ahora viven en AppBottomNavBar (persistente en
             // las 4 pantallas principales); aqui solo queda la accion principal y Ajustes, que no
             // entra como 5ta pestaña sin apretar el diseño de la barra inferior.
@@ -136,7 +176,11 @@ private fun HomeHeroCard(welcome: String, subtitle: String, analysesLabel: Strin
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.extraLarge)
-            .background(MaterialTheme.colorScheme.primary)
+            .background(
+                Brush.linearGradient(
+                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
+                )
+            )
             .padding(20.dp)
     ) {
         Column {
@@ -216,4 +260,59 @@ private fun HomeMenuCard(item: HomeMenuItem, onClick: () -> Unit) {
             )
         }
     }
+}
+
+/** [Principio S - SRP] Unica responsabilidad: mostrar un numero (cuantos analisis de ese nivel de riesgo) con su etiqueta. */
+@Composable
+private fun HomeStatTile(label: String, count: Int, accent: Color, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp).fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = count.toString(), style = MaterialTheme.typography.headlineSmall, color = accent)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * [Principio S - SRP] Unica responsabilidad: mostrar un consejo breve de cuidado visual, para que
+ * Home no sea solo un menu de accesos. No es contenido inventado por adorno: son recomendaciones
+ * reales de higiene/cuidado visual, las mismas que daria un oftalmologo.
+ */
+@Composable
+private fun HomeTipCard(label: String, tip: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+    ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
+            Icon(imageVector = Icons.Filled.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onTertiaryContainer)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = tip, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onTertiaryContainer)
+            }
+        }
+    }
+}
+
+/** Elige un consejo distinto cada dia (determinado por la fecha, no al azar) entre los disponibles. */
+private fun dailyTip(strings: AppStrings): String {
+    val tips = listOf(strings.homeTip1, strings.homeTip2, strings.homeTip3, strings.homeTip4, strings.homeTip5, strings.homeTip6)
+    val dayIndex = (System.currentTimeMillis() / 86_400_000L).toInt()
+    return tips[((dayIndex % tips.size) + tips.size) % tips.size]
 }

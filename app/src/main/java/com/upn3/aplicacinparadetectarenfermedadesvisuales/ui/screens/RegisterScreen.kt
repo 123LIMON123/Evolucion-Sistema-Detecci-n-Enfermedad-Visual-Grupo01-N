@@ -1,8 +1,12 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens
 
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +17,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -29,12 +35,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.R
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AuthFailureReason
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
@@ -61,6 +72,7 @@ private fun errorMessageFor(reason: AuthFailureReason, strings: AppStrings): Str
 @Composable
 fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     val strings = LocalAppStrings.current
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
     var name by remember { mutableStateOf("") }
@@ -73,6 +85,34 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     val errorMessage = validationError
         ?: (uiState as? AuthUiState.Error)?.let { errorMessageFor(it.reason, strings) }
 
+    fun goHome() {
+        navController.navigate("home") {
+            popUpTo("login") { inclusive = true }
+        }
+    }
+
+    val googleSignInClient = remember(context) {
+        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, options)
+    }
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { activityResult ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(activityResult.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account.idToken
+            if (idToken != null) {
+                viewModel.signInWithGoogle(idToken) { goHome() }
+            }
+        } catch (e: ApiException) {
+            Log.e("RegisterScreen", "Google Sign-In fallo: ${e.statusCode}", e)
+        }
+    }
+
     fun attemptRegister() {
         validationError = when {
             name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank() ->
@@ -83,11 +123,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             else -> null
         }
         if (validationError == null) {
-            viewModel.register(name, email, password, confirmPassword) {
-                navController.navigate("home") {
-                    popUpTo("login") { inclusive = true }
-                }
-            }
+            viewModel.register(name, email, password, confirmPassword) { goHome() }
         }
     }
 
@@ -210,6 +246,30 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                         Text(text = strings.registerButton, style = MaterialTheme.typography.titleMedium)
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    HorizontalDivider(modifier = Modifier.weight(1f))
+                    Text(
+                        text = strings.orDividerLabel,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                    HorizontalDivider(modifier = Modifier.weight(1f))
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = {
+                        viewModel.clearError()
+                        googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                    },
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text(text = strings.googleSignInAction)
+                }
+
                 Spacer(modifier = Modifier.height(4.dp))
                 TextButton(onClick = {
                     viewModel.clearError()
