@@ -107,9 +107,12 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             val idToken = account.idToken
             if (idToken != null) {
                 viewModel.signInWithGoogle(idToken) { goHome() }
+            } else {
+                validationError = strings.errorGoogleSignInFailed
             }
         } catch (e: ApiException) {
             Log.e("RegisterScreen", "Google Sign-In fallo: ${e.statusCode}", e)
+            validationError = strings.errorGoogleSignInFailed
         }
     }
 

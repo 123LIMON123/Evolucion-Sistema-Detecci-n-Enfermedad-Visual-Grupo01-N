@@ -110,9 +110,12 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             val idToken = account.idToken
             if (idToken != null) {
                 viewModel.signInWithGoogle(idToken) { goHome() }
+            } else {
+                validationError = strings.errorGoogleSignInFailed
             }
         } catch (e: ApiException) {
             Log.e("LoginScreen", "Google Sign-In fallo: ${e.statusCode}", e)
+            validationError = strings.errorGoogleSignInFailed
         }
     }
 
