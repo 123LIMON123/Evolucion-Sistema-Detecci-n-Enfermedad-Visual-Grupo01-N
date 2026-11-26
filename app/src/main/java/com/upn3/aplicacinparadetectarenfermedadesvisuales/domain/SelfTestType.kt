@@ -20,8 +20,9 @@ enum class SelfTestType {
 
     /**
      * No existe un autotest casero confiable para esta condicion (requiere equipo clinico:
-     * tonometro, fondo de ojo dilatado, control de presion arterial o glucosa). Se muestra una
-     * recomendacion honesta en vez de inventar una prueba.
+     * tonometro, fondo de ojo dilatado, control de presion arterial o glucosa), pero si hay
+     * prevencion/control real y especifico que mostrar (no una prueba inventada). Se muestra en
+     * positivo ("Prevencion"), no como "esto no se puede hacer".
      */
-    NO_RELIABLE_SELF_TEST
+    PREVENTION_ONLY
 }

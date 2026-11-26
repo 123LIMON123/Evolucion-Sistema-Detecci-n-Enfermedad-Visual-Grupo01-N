@@ -24,26 +24,28 @@ import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBa
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.SelfTestDisclaimerBanner
 
 /**
- * [Principio S - SRP] Unica responsabilidad: mostrar, honestamente, que una condicion (Diabetes,
- * Glaucoma o Hipertension) no tiene un autotest casero confiable, y que hace falta equipo
- * clinico para evaluarla. No intenta simular un test falso solo para tener contenido.
+ * [Principio S - SRP] Unica responsabilidad: mostrar, en positivo, que se puede hacer para
+ * prevenir o controlar una condicion que no tiene autotest casero (Diabetes, Glaucoma,
+ * Hipertension) ni deteccion por foto (Pterigion, por ahora). No intenta simular un test falso
+ * solo para tener contenido: muestra la prevencion real y especifica de cada una.
  */
 @Composable
-fun NoReliableSelfTestScreen(navController: NavController, localizationRepository: LocalizationRepository, diseaseCode: String) {
+fun PreventionScreen(navController: NavController, localizationRepository: LocalizationRepository, diseaseCode: String) {
     val strings = LocalAppStrings.current
     val language = LocalAppLanguage.current
 
-    val whatIsNeededText = when (diseaseCode) {
-        "D" -> strings.noReliableTestDiabetes
-        "G" -> strings.noReliableTestGlaucoma
-        "H" -> strings.noReliableTestHypertension
-        else -> strings.noReliableTestDiabetes
+    val whatToDoText = when (diseaseCode) {
+        "D" -> strings.preventionDiabetes
+        "G" -> strings.preventionGlaucoma
+        "H" -> strings.preventionHypertension
+        "PTER" -> strings.preventionPterygium
+        else -> strings.preventionDiabetes
     }
 
     Scaffold(
         topBar = {
             AppTopBar(
-                title = strings.noReliableTestTitle,
+                title = strings.preventionTitle,
                 language = language,
                 onToggleLanguage = { localizationRepository.toggle() },
                 backContentDescription = strings.back,
@@ -60,9 +62,9 @@ fun NoReliableSelfTestScreen(navController: NavController, localizationRepositor
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             SelfTestDisclaimerBanner(text = strings.selfTestDisclaimer)
-            Text(text = strings.noReliableTestIntro, style = MaterialTheme.typography.bodyMedium)
-            Text(text = strings.noReliableTestWhatIsNeeded, style = MaterialTheme.typography.titleSmall)
-            Text(text = whatIsNeededText, style = MaterialTheme.typography.bodyMedium)
+            Text(text = strings.preventionIntro, style = MaterialTheme.typography.bodyMedium)
+            Text(text = strings.preventionWhatToDo, style = MaterialTheme.typography.titleSmall)
+            Text(text = whatToDoText, style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Button(onClick = { navController.popBackStack() }, modifier = Modifier.fillMaxWidth()) {
                 Text(strings.selfTestBackToInfoAction)

@@ -1,11 +1,13 @@
 package com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.screens
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +23,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -33,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -40,9 +44,9 @@ import androidx.navigation.NavController
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.AnalysisHistoryRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.LocalizationRepository
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.data.ReminderRepository
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.AppLanguage
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppLanguage
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.next
-import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.shortCode
+import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.displayName
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.l10n.LocalAppStrings
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.reminders.ReminderScheduler
 import com.upn3.aplicacinparadetectarenfermedadesvisuales.ui.components.AppTopBar
@@ -119,14 +123,21 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             SettingsSection(title = strings.settingsLanguageSection) {
-                SettingsRow(
-                    label = strings.settingsLanguageCurrentValue,
-                    action = {
-                        TextButton(onClick = { localizationRepository.toggle() }) {
-                            Text("${language.shortCode()} → ${language.next().shortCode()}")
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    AppLanguage.entries.forEach { option ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.medium)
+                                .clickable { localizationRepository.setLanguage(option) }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = option == language, onClick = { localizationRepository.setLanguage(option) })
+                            Text(option.displayName(), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
-                )
+                }
             }
 
             SettingsSection(title = strings.settingsRemindersSection) {
@@ -163,6 +174,29 @@ fun SettingsScreen(
                     )
                 ) {
                     Text(strings.settingsClearHistoryAction)
+                }
+            }
+
+            SettingsSection(title = strings.settingsPrivacySection) {
+                Text(
+                    text = strings.settingsPrivacyDescription,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            SettingsSection(title = strings.settingsShareAction) {
+                OutlinedButton(
+                    onClick = {
+                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, strings.settingsShareText)
+                        }
+                        context.startActivity(Intent.createChooser(sendIntent, strings.settingsShareAction))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(strings.settingsShareAction)
                 }
             }
 

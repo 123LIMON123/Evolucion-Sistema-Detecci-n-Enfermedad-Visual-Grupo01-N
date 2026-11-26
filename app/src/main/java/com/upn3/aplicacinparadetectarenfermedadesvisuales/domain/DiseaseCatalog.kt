@@ -34,10 +34,12 @@ object DiseaseCatalog {
         // modelo sin importar cuantos datos se sumen. Se dejan como contenido informativo; ver
         // ml/EXTERNAL_DATASETS.md para el detalle de esta decision.
         val isDetectableByModel: Boolean = true,
-        // Autotest casero de cribado para las condiciones que el modelo no puede ver (ver
-        // SelfTestType). null = no hay un autotest conocido y relevante para esta condicion (p.ej.
-        // N/C/CONJ ya se evaluan con la camara; PTER/PTOS/O son visibles pero sin un test
-        // estandarizado que aplicar).
+        // Autotest/prevencion de cribado para las condiciones que el modelo no puede ver (ver
+        // SelfTestType). null = no hay nada accionable en casa para esta condicion (p.ej. N/C/CONJ
+        // ya se evaluan con la camara, asi que no necesitan esto). Las condiciones sin deteccion,
+        // sin autotest Y sin una prevencion real y especifica (ej. la antigua "O"/"Otra" y
+        // "Ptosis", que solo decian "consulte a un oftalmologo") se sacaron del catalogo: no
+        // tenia sentido mostrarlas si no hay nada que el usuario pueda hacer con esa info.
         val selfTest: SelfTestType? = null
     ) {
         fun localized(language: AppLanguage): LocalizedDiseaseInfo = when (language) {
@@ -69,7 +71,7 @@ object DiseaseCatalog {
         DiseaseInfo(
             code = "D",
             isDetectableByModel = false,
-            selfTest = SelfTestType.NO_RELIABLE_SELF_TEST,
+            selfTest = SelfTestType.PREVENTION_ONLY,
             es = LocalizedDiseaseInfo(
                 name = "Diabetes",
                 description = "La retinopatia diabetica es una complicacion de la diabetes que afecta los ojos. " +
@@ -93,7 +95,7 @@ object DiseaseCatalog {
         DiseaseInfo(
             code = "G",
             isDetectableByModel = false,
-            selfTest = SelfTestType.NO_RELIABLE_SELF_TEST,
+            selfTest = SelfTestType.PREVENTION_ONLY,
             es = LocalizedDiseaseInfo(
                 name = "Glaucoma",
                 description = "Grupo de condiciones oculares que danan el nervio optico, a menudo por presion " +
@@ -157,7 +159,7 @@ object DiseaseCatalog {
         DiseaseInfo(
             code = "H",
             isDetectableByModel = false,
-            selfTest = SelfTestType.NO_RELIABLE_SELF_TEST,
+            selfTest = SelfTestType.PREVENTION_ONLY,
             es = LocalizedDiseaseInfo(
                 name = "Hipertensión",
                 description = "La hipertension puede danar los vasos sanguineos de la retina. Ese dano solo es " +
@@ -195,26 +197,6 @@ object DiseaseCatalog {
                     "this app cannot detect it from a photo, it is included here for reference only.",
                 symptoms = listOf("Blurred distance vision", "Eye strain", "Squinting"),
                 recommendation = "Use optical correction and get periodic fundus exams."
-            )
-        ),
-        DiseaseInfo(
-            code = "O",
-            isDetectableByModel = false,
-            es = LocalizedDiseaseInfo(
-                name = "Otra",
-                description = "Otras anomalias oculares no clasificadas en las categorias anteriores, " +
-                    "originalmente observadas en fotos de fondo de ojo. Esta app no puede detectarla a partir " +
-                    "de una foto normal del ojo por fuera, se incluye aqui solo como informacion de referencia.",
-                symptoms = listOf("Variable segun la anomalia detectada"),
-                recommendation = "Consulte a un oftalmologo para una evaluacion detallada."
-            ),
-            en = LocalizedDiseaseInfo(
-                name = "Other",
-                description = "Other eye abnormalities not classified in the categories above, originally " +
-                    "observed in fundus photos. This app cannot detect it from a normal external eye photo, it " +
-                    "is included here for reference only.",
-                symptoms = listOf("Variable depending on the abnormality detected"),
-                recommendation = "Consult an ophthalmologist for a detailed evaluation."
             )
         ),
         DiseaseInfo(
@@ -258,13 +240,15 @@ object DiseaseCatalog {
                 recommendation = "Diagnosed with a refraction exam, not a photo; consult an optometrist or ophthalmologist."
             )
         ),
-        // Las tres siguientes (v1.1) son condiciones visibles en foto externa, igual que CONJ y
-        // C, pero quedan como informativas (isDetectableByModel = false) porque el modelo actual
-        // no se entreno para reconocerlas: agregar una clase nueva de verdad requiere un dataset
-        // etiquetado y un reentrenamiento (ver ml/EXTERNAL_DATASETS.md), no solo texto.
+        // Pterigion (v1.1) es visible en foto externa, igual que CONJ y C, pero queda como
+        // informativo (isDetectableByModel = false) porque el modelo actual no se entreno para
+        // reconocerlo: agregar una clase nueva de verdad requiere un dataset etiquetado y un
+        // reentrenamiento (ver ml/EXTERNAL_DATASETS.md), no solo texto. Si tiene prevencion real y
+        // especifica (proteccion UV), a diferencia de "Otra"/"Ptosis" que se sacaron del catalogo.
         DiseaseInfo(
             code = "PTER",
             isDetectableByModel = false,
+            selfTest = SelfTestType.PREVENTION_ONLY,
             es = LocalizedDiseaseInfo(
                 name = "Pterigión",
                 description = "Crecimiento carnoso y triangular de tejido conjuntival que avanza desde la " +
@@ -282,28 +266,6 @@ object DiseaseCatalog {
                     "is included here for reference only.",
                 symptoms = listOf("Visible fleshy growth on the eye", "Redness and irritation", "Foreign body sensation", "Blurred vision if it grows over the cornea"),
                 recommendation = "Wear UV-protective sunglasses; see an ophthalmologist if it grows or affects vision, it may require surgery."
-            )
-        ),
-        DiseaseInfo(
-            code = "PTOS",
-            isDetectableByModel = false,
-            es = LocalizedDiseaseInfo(
-                name = "Ptosis",
-                description = "Caída del párpado superior por debilidad del músculo o nervio que lo eleva, " +
-                    "congénita o adquirida con la edad. Es visible en una foto del ojo por fuera, pero este " +
-                    "modelo todavía no fue entrenado para reconocerla: se incluye aquí solo como información " +
-                    "de referencia.",
-                symptoms = listOf("Párpado superior caído", "Necesidad de inclinar la cabeza para ver bien", "Fatiga al mantener el ojo abierto", "Cejas levantadas por compensación"),
-                recommendation = "Consulte a un oftalmólogo: puede afectar la visión y, en casos marcados, corregirse con cirugía."
-            ),
-            en = LocalizedDiseaseInfo(
-                name = "Ptosis",
-                description = "Drooping of the upper eyelid due to weakness of the muscle or nerve that lifts " +
-                    "it, either congenital or acquired with age. It is visible in a normal external eye photo, " +
-                    "but this model has not been trained to recognize it yet: it is included here for " +
-                    "reference only.",
-                symptoms = listOf("Drooping upper eyelid", "Tilting the head back to see clearly", "Fatigue from keeping the eye open", "Raised eyebrows from compensation"),
-                recommendation = "See an ophthalmologist: it can affect vision and, in marked cases, be corrected with surgery."
             )
         ),
         DiseaseInfo(
